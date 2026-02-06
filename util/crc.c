@@ -6,6 +6,7 @@
 //
 // Meridian is a registered trademark.
 
+#include <string.h>
 #include "crc.h"
 
 static const unsigned int crc_table[] =
@@ -76,7 +77,49 @@ static const unsigned int crc_table[] =
    0xb40bbe37, 0xc30c8ea1, 0x5a05df1b, 0x2d02ef8d,
 };
 
+// Slicing-by-8 tables
+static unsigned int crc_table_slice[7][256];
+static volatile int crc_inited = 0;
+
+static void init_crc_tables(void) {
+   int i, k;
+   for (i = 0; i < 256; i++) {
+      unsigned int c = crc_table[i];
+      for (k = 0; k < 7; k++) {
+         c = crc_table[c & 0xff] ^ (c >> 8);
+         crc_table_slice[k][i] = c;
+      }
+   }
+   crc_inited = 1;
+}
+
 unsigned int CRC32Incremental(unsigned int crc, const char *ptr, int len) {
+#if defined(__i386__) || defined(__x86_64__) || defined(_M_IX86) || defined(_M_X64)
+   if (!crc_inited) {
+       init_crc_tables();
+   }
+
+   while (len >= 8) {
+       unsigned int one, two;
+       memcpy(&one, ptr, 4);
+       memcpy(&two, ptr + 4, 4);
+
+       one ^= crc;
+
+       crc = crc_table_slice[6][one & 0xff] ^
+             crc_table_slice[5][(one >> 8) & 0xff] ^
+             crc_table_slice[4][(one >> 16) & 0xff] ^
+             crc_table_slice[3][one >> 24] ^
+             crc_table_slice[2][two & 0xff] ^
+             crc_table_slice[1][(two >> 8) & 0xff] ^
+             crc_table_slice[0][(two >> 16) & 0xff] ^
+             crc_table[two >> 24];
+
+       ptr += 8;
+       len -= 8;
+   }
+#endif
+
    for (int i = 0; i < len; ++i)
    {
       unsigned int temp = crc_table[ ( (int) crc ^ (int) *ptr++ ) & 0xff];
