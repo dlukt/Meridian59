@@ -45,7 +45,7 @@ void WriteChannelBuffer(int channel_id,char *s)
    if (((head_buffer+1) % MAX_BUFFERS) != tail_buffer)
    {
       channel_buffers[head_buffer].channel_id = channel_id;
-      if (strlen(str) > CHANBUF_SIZE)
+      if (strlen(str) >= CHANBUF_SIZE)
 			str = "<<WriteChannelBuffer got string too long to display>>";
 
       // Copy all but trailing \n's and \r's.
