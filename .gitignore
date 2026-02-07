@@ -29,6 +29,8 @@ bin/porttest.exe
 bin/rscmerge.exe
 bin/rscprint.exe
 bin/waveplay.dll
+tests/unit_tests
+tests/unit_tests.exe
 install/meridian59-installer.exe
 roomedit/windeu32.log
 resource/rooms/*~

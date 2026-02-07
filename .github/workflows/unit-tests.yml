@@ -1,0 +1,17 @@
+name: Unit Tests
+
+on:
+  pull_request:
+    branches: [ "master" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  c-unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run C unit tests
+        run: make -C tests test
