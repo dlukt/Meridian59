@@ -42,6 +42,14 @@ the vcvars32.bat script that comes with Visual Studio.
 3. Type "nmake" to build debug versions, or "nmake RELEASE=1" to build
 release versions.
 
+UNIT TESTS
+
+A lightweight C unit test harness for shared utilities is available in
+the tests directory.  To build and run it on a system with a C compiler:
+
+cd tests
+make test
+
 RUN INSTRUCTIONS
 
 After building the code, a server install is available in the
