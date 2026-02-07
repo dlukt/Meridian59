@@ -1,6 +1,7 @@
 #include <limits.h>
 #include <string.h>
 
+#include "../blakserv/blakserv.h"
 #include "crc.h"
 #include "md5.h"
 #include "test_framework.h"
@@ -66,6 +67,30 @@ static int test_md5_zero_byte_replacement(void)
     return 0;
 }
 
+static int test_time_strings_zero(void)
+{
+    ASSERT_TRUE(TimeStr(0) == "Never");
+    ASSERT_TRUE(ShortTimeStr(0) == "Never");
+    ASSERT_TRUE(FileTimeStr(0) == "Never");
+    return 0;
+}
+
+static int test_relative_time_format(void)
+{
+    ASSERT_TRUE(RelativeTimeStr(0) == "0 sec");
+    ASSERT_TRUE(RelativeTimeStr(3661) == "1 hour 1 minute 1 second ");
+    return 0;
+}
+
+static int test_get_milli_count_monotonic(void)
+{
+    UINT64 first = GetMilliCount();
+    UINT64 second = GetMilliCount();
+
+    ASSERT_TRUE(second >= first);
+    return 0;
+}
+
 int main(void)
 {
     int tests_run = 0;
@@ -75,6 +100,9 @@ int main(void)
     failures += run_test("test_crc32_incremental", test_crc32_incremental, &tests_run);
     failures += run_test("test_md5_standard_value", test_md5_standard_value, &tests_run);
     failures += run_test("test_md5_zero_byte_replacement", test_md5_zero_byte_replacement, &tests_run);
+    failures += run_test("test_time_strings_zero", test_time_strings_zero, &tests_run);
+    failures += run_test("test_relative_time_format", test_relative_time_format, &tests_run);
+    failures += run_test("test_get_milli_count_monotonic", test_get_milli_count_monotonic, &tests_run);
 
     if (failures != 0)
     {
