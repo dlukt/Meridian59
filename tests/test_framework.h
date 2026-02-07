@@ -53,4 +53,4 @@ static inline int run_test(const char *name, test_fn fn, int *tests_run)
         } \
     } while (0)
 
-#endif
+#endif /* TEST_FRAMEWORK_H */
