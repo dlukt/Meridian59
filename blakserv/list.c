@@ -289,25 +289,24 @@ void MoveListElem(val_type list_id, val_type n, val_type m)
     return;
   }
 
-  // Copy all list data into a vector
-  std::vector<val_type> node_contents;
-  node_contents.push_back(list->first);
-  list_node *node = list;
-  while (node != NULL && node->rest.v.data != NIL)
-  {
-    node = GetListNodeByID(node->rest.v.data);
-    node_contents.push_back(node->first);
+  // Calculate size to validate indices
+  int size = 1;
+  list_node* node = list;
+  while(node && node->rest.v.data != NIL) {
+      size++;
+      node = GetListNodeByID(node->rest.v.data);
   }
 
   int source_index = n.v.data;
   int dest_index = m.v.data;
-  if (source_index <= 0 || source_index > (int) node_contents.size())
+
+  if (source_index <= 0 || source_index > size)
   {
     bprintf("MoveListElem got source index out of range %i in list %" PRId64 "\n",
             source_index, list_id.v.data);
     return;
   }
-  if (dest_index <= 0 || dest_index > (int) node_contents.size() + 1)
+  if (dest_index <= 0 || dest_index > size + 1)
   {
     bprintf("MoveListElem got destination index out of range %i in list %" PRId64 "\n",
             dest_index, list_id.v.data);
@@ -318,22 +317,56 @@ void MoveListElem(val_type list_id, val_type n, val_type m)
   {
     return;
   }
-  
-  // Go from 1-based (Blakod) to 0-based
-  source_index -= 1;
-  dest_index -= 1;
 
-  // Do the move on the vector
-  node_contents.insert(node_contents.begin() + dest_index, node_contents[source_index]);
-  int pos_to_erase = source_index + (source_index > dest_index ? 1 : 0);
-  node_contents.erase(node_contents.begin() + pos_to_erase);
-  
-  // Copy the vector back to the list
-  node = list;
-  for (auto data : node_contents)
-  {
-    node->first = data;
-    node = GetListNodeByID(node->rest.v.data);
+  // Perform in-place rotation instead of vector allocation
+  if (source_index < dest_index) {
+      // Rotate Left [source, dest-1]
+
+      int curr_idx = 1;
+      node = list;
+      while (curr_idx < source_index) {
+          node = GetListNodeByID(node->rest.v.data);
+          curr_idx++;
+      }
+
+      val_type temp = node->first;
+
+      while (curr_idx < dest_index - 1) {
+          list_node* next_node = GetListNodeByID(node->rest.v.data);
+          node->first = next_node->first;
+          node = next_node;
+          curr_idx++;
+      }
+      node->first = temp;
+
+  } else {
+      // Rotate Right [dest, source]
+
+      list_node* dest_node = list;
+      int curr_idx = 1;
+      while(curr_idx < dest_index) {
+          dest_node = GetListNodeByID(dest_node->rest.v.data);
+          curr_idx++;
+      }
+
+      list_node* source_node = dest_node;
+      int temp_idx = curr_idx;
+      while(temp_idx < source_index) {
+           source_node = GetListNodeByID(source_node->rest.v.data);
+           temp_idx++;
+      }
+      val_type carry_val = source_node->first;
+
+      node = dest_node;
+      while (curr_idx <= source_index) {
+          val_type temp = node->first;
+          node->first = carry_val;
+          carry_val = temp;
+
+          if (curr_idx < source_index)
+               node = GetListNodeByID(node->rest.v.data);
+          curr_idx++;
+      }
   }
 }
 
