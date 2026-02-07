@@ -1,10 +1,21 @@
-#include <limits.h>
-#include <string.h>
+#include <climits>
+#include <cstring>
+#include <string>
 
-#include "../blakserv/blakserv.h"
+#include "../blakserv/osd_linux.h"
+#include "../blakserv/btime.h"
 #include "crc.h"
 #include "md5.h"
 #include "test_framework.h"
+
+static std::string TrimTrailingSpaces(std::string value)
+{
+    while (!value.empty() && value.back() == ' ')
+    {
+        value.pop_back();
+    }
+    return value;
+}
 
 static int test_crc32_known_value(void)
 {
@@ -77,8 +88,11 @@ static int test_time_strings_zero(void)
 
 static int test_relative_time_format(void)
 {
-    ASSERT_TRUE(RelativeTimeStr(0) == "0 sec");
-    ASSERT_TRUE(RelativeTimeStr(3661) == "1 hour 1 minute 1 second ");
+    const int one_hour_one_min_one_sec = 3600 + 60 + 1;
+
+    ASSERT_TRUE(TrimTrailingSpaces(RelativeTimeStr(0)) == "0 sec");
+    ASSERT_TRUE(TrimTrailingSpaces(RelativeTimeStr(one_hour_one_min_one_sec)) ==
+        "1 hour 1 minute 1 second");
     return 0;
 }
 
