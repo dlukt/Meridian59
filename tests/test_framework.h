@@ -37,7 +37,7 @@ static inline int run_test(const char *name, test_fn fn, int *tests_run)
     { \
         if ((expected) != (actual)) \
         { \
-            fprintf(stderr, "Expected 0x%x but got 0x%x (%s:%d)\n", \
+            fprintf(stderr, "Expected 0x%08x but got 0x%08x (%s:%d)\n", \
                 (unsigned int)(expected), (unsigned int)(actual), __FILE__, __LINE__); \
             return 1; \
         } \

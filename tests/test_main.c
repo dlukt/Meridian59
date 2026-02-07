@@ -1,3 +1,4 @@
+#include <limits.h>
 #include <string.h>
 
 #include "crc.h"
@@ -7,7 +8,11 @@
 static int test_crc32_known_value(void)
 {
     const char *input = "test";
-    unsigned int result = CRC32(input, (int)strlen(input));
+    size_t length = strlen(input);
+    unsigned int result;
+
+    ASSERT_TRUE(length <= INT_MAX);
+    result = CRC32(input, (int)length);
 
     ASSERT_EQ_UINT(0xd87f7e0cU, result);
     return 0;
@@ -19,10 +24,14 @@ static int test_crc32_incremental(void)
     unsigned int mask = 0xFFFFFFFFU;
     unsigned int crc = mask;
     int split = 4;
-    int length = (int)strlen(input);
+    size_t length = strlen(input);
+    int length_int;
+
+    ASSERT_TRUE(length <= INT_MAX);
+    length_int = (int)length;
 
     crc = CRC32Incremental(crc, input, split);
-    crc = CRC32Incremental(crc, input + split, length - split);
+    crc = CRC32Incremental(crc, input + split, length_int - split);
     crc ^= mask;
 
     ASSERT_EQ_UINT(0x55c1dbd4U, crc);
