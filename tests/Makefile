@@ -1,13 +1,13 @@
-CC ?= cc
-CFLAGS ?= -std=c99 -Wall -Wextra -I../include
+CXX ?= g++
+CXXFLAGS ?= -std=c++20 -x c++ -Wall -Wextra -I../include -DBLAK_PLATFORM_LINUX
 
 TARGET = unit_tests
-SOURCES = test_main.c ../util/crc.c ../util/md5.c
+SOURCES = test_main.cpp ../util/crc.c ../util/md5.c ../blakserv/time.c
 
 all: $(TARGET)
 
 $(TARGET): $(SOURCES)
-	$(CC) $(CFLAGS) -o $(TARGET) $(SOURCES)
+	$(CXX) $(CXXFLAGS) -o $(TARGET) $(SOURCES)
 
 test: $(TARGET)
 	./$(TARGET)

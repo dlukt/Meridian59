@@ -1,9 +1,21 @@
-#include <limits.h>
-#include <string.h>
+#include <climits>
+#include <cstring>
+#include <string>
 
+#include "../blakserv/osd_linux.h"
+#include "../blakserv/btime.h"
 #include "crc.h"
 #include "md5.h"
 #include "test_framework.h"
+
+static std::string TrimTrailingSpaces(std::string value)
+{
+    while (!value.empty() && value.back() == ' ')
+    {
+        value.pop_back();
+    }
+    return value;
+}
 
 static int test_crc32_known_value(void)
 {
@@ -66,6 +78,33 @@ static int test_md5_zero_byte_replacement(void)
     return 0;
 }
 
+static int test_time_strings_zero(void)
+{
+    ASSERT_TRUE(TimeStr(0) == "Never");
+    ASSERT_TRUE(ShortTimeStr(0) == "Never");
+    ASSERT_TRUE(FileTimeStr(0) == "Never");
+    return 0;
+}
+
+static int test_relative_time_format(void)
+{
+    const int one_hour_one_min_one_sec = 3600 + 60 + 1;
+
+    ASSERT_TRUE(TrimTrailingSpaces(RelativeTimeStr(0)) == "0 sec");
+    ASSERT_TRUE(TrimTrailingSpaces(RelativeTimeStr(one_hour_one_min_one_sec)) ==
+        "1 hour 1 minute 1 second");
+    return 0;
+}
+
+static int test_get_milli_count_monotonic(void)
+{
+    UINT64 first = GetMilliCount();
+    UINT64 second = GetMilliCount();
+
+    ASSERT_TRUE(second >= first);
+    return 0;
+}
+
 int main(void)
 {
     int tests_run = 0;
@@ -75,6 +114,9 @@ int main(void)
     failures += run_test("test_crc32_incremental", test_crc32_incremental, &tests_run);
     failures += run_test("test_md5_standard_value", test_md5_standard_value, &tests_run);
     failures += run_test("test_md5_zero_byte_replacement", test_md5_zero_byte_replacement, &tests_run);
+    failures += run_test("test_time_strings_zero", test_time_strings_zero, &tests_run);
+    failures += run_test("test_relative_time_format", test_relative_time_format, &tests_run);
+    failures += run_test("test_get_milli_count_monotonic", test_get_milli_count_monotonic, &tests_run);
 
     if (failures != 0)
     {
