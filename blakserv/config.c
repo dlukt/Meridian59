@@ -201,7 +201,7 @@ config_table_type config_table[] =
 { SERVICE_MACHINE,        true, "Machine",       CONFIG_STR,   "ftp.neardeathstudios.com" },
 { SERVICE_DIRECTORY,      true, "Directory",     CONFIG_STR,   "/private/m59/service" },
 { SERVICE_USERNAME,       true, "Username",      CONFIG_STR,   "m59ftp" },
-{ SERVICE_PASSWORD,       true, "Password",      CONFIG_STR,   "b58Iz3xp" },
+{ SERVICE_PASSWORD,       true, "Password",      CONFIG_STR,   "" },
 
 { BLAKOD_GROUP,           false, "[Blakod]",      CONFIG_GROUP, "" },
 { BLAKOD_MAX_STATEMENTS,  true, "MaxStatements", CONFIG_INT,   "20000000" },
@@ -276,13 +276,13 @@ const char * AddConfig(int config_id,const char *config_data,int config_type,int
       {
         path.pop_back();
       }
-      
+
       if (!std::filesystem::is_directory(path))
         return "invalid path--not found";
-      
+
       // Add trailing file separator to make later concatenation easier
       path.push_back(std::filesystem::path::preferred_separator);
-      
+
       c->config_str_value = (char *)AllocateMemory(MALLOC_ID_CONFIG,path.size()+1);
       strcpy(c->config_str_value, path.c_str());
       break;
