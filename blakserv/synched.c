@@ -640,45 +640,26 @@ void SynchedGotoGame(session_node *s,int last_download_time)
    if (ConfigBool(SERVICE_ENABLED))
    {
       // Tell client how they could Put an FTP file for a service report.
-      std::string user_check, pass_check;
-      char *temp_str;
 
-      temp_str = LockConfigStr(SERVICE_USERNAME);
-      if (temp_str != NULL)
-         user_check = temp_str;
+      AddByteToPacket(AP_SERVICEREPORT);
+
+      str = LockConfigStr(SERVICE_MACHINE);
+      AddStringToPacket(strlen(str),str);
       UnlockConfigStr();
 
-      temp_str = LockConfigStr(SERVICE_PASSWORD);
-      if (temp_str != NULL)
-         pass_check = temp_str;
+      str = LockConfigStr(SERVICE_DIRECTORY);
+      AddStringToPacket(strlen(str),str);
       UnlockConfigStr();
 
-      if (!user_check.empty() && !pass_check.empty())
-      {
-         AddByteToPacket(AP_SERVICEREPORT);
+      str = LockConfigStr(SERVICE_USERNAME);
+      AddStringToPacket(strlen(str),str);
+      UnlockConfigStr();
 
-         str = LockConfigStr(SERVICE_MACHINE);
-         AddStringToPacket(strlen(str),str);
-         UnlockConfigStr();
+      str = LockConfigStr(SERVICE_PASSWORD);
+      AddStringToPacket(strlen(str),str);
+      UnlockConfigStr();
 
-         str = LockConfigStr(SERVICE_DIRECTORY);
-         AddStringToPacket(strlen(str),str);
-         UnlockConfigStr();
-
-         str = LockConfigStr(SERVICE_USERNAME);
-         AddStringToPacket(strlen(str),str);
-         UnlockConfigStr();
-
-         str = LockConfigStr(SERVICE_PASSWORD);
-         AddStringToPacket(strlen(str),str);
-         UnlockConfigStr();
-
-         SendPacket(s->session_id);
-      }
-      else
-      {
-         lprintf("Service enabled but credentials missing; not sending report info.\n");
-      }
+      SendPacket(s->session_id);
    }
 
    // All set to go to game mode.
