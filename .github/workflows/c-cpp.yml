@@ -1,9 +1,5 @@
 name: Build code
-on: 
-  push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+on:
   workflow_dispatch:
   
 jobs:
