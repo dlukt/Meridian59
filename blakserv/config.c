@@ -200,8 +200,8 @@ config_table_type config_table[] =
 { SERVICE_ENABLED,        true, "Enabled",       CONFIG_BOOL,  "No" },
 { SERVICE_MACHINE,        true, "Machine",       CONFIG_STR,   "ftp.neardeathstudios.com" },
 { SERVICE_DIRECTORY,      true, "Directory",     CONFIG_STR,   "/private/m59/service" },
-{ SERVICE_USERNAME,       true, "Username",      CONFIG_STR,   "m59ftp" },
-{ SERVICE_PASSWORD,       true, "Password",      CONFIG_STR,   "b58Iz3xp" },
+{ SERVICE_USERNAME,       true, "Username",      CONFIG_STR,   "" },
+{ SERVICE_PASSWORD,       true, "Password",      CONFIG_STR,   "" },
 
 { BLAKOD_GROUP,           false, "[Blakod]",      CONFIG_GROUP, "" },
 { BLAKOD_MAX_STATEMENTS,  true, "MaxStatements", CONFIG_INT,   "20000000" },

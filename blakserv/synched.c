@@ -33,12 +33,12 @@ void SynchedInit(session_node *s)
 {
    /* if you ever get here, you ARE running our client */
    s->blak_client = true;
-   
+
    s->syn = (synched_data *)s->session_state_data;
 
    s->syn->failed_tries = 0;
    s->syn->download_count = 0;
-   
+
    SetSessionTimer(s,60*ConfigInt(INACTIVE_SYNCHED));
 
    if (s->account == NULL)      /* only need password if first time in this mode */
@@ -68,7 +68,7 @@ void SynchedProcessSessionTimer(session_node *s)
 void SynchedProcessSessionBuffer(session_node *s)
 {
    client_msg msg;
-   
+
    SetSessionTimer(s,60*ConfigInt(INACTIVE_SYNCHED));
 
    /* need to copy only as many bytes as we can hold */
@@ -94,7 +94,7 @@ void SynchedProcessSessionBuffer(session_node *s)
 
 	 return;
       }
-      
+
       /* now read the header for real, plus the actual data */
       if (ReadSessionBytes(s,msg.len+HEADERBYTES,&msg) == false)
 	 return;
@@ -133,7 +133,7 @@ void SynchedProtocolParse(session_node *s,client_msg *msg)
    {
       int i;
       dprintf("sess %i len %i cmd %u: ",s->session_id,msg->len,
-	      msg->data[0]); 
+	      msg->data[0]);
       for (i=0;i<msg->len;i++)
 	 dprintf("%02X ",msg->data[i]);
       dprintf("\n");
@@ -149,7 +149,7 @@ void SynchedProtocolParse(session_node *s,client_msg *msg)
       InterfaceUpdateSession(s);
    }
 
-   
+
    index = 1;
 
    if (msg->data[0] != AP_LOGIN && s->account == NULL)
@@ -160,7 +160,7 @@ void SynchedProtocolParse(session_node *s,client_msg *msg)
 
    switch (msg->data[0])
    {
-   case AP_LOGIN : 
+   case AP_LOGIN :
       if (msg->len < 39) /* fixed size of AP_LOGIN, before strings */
 	 break;
       s->version_major = *(char *)(msg->data+index);
@@ -203,7 +203,7 @@ void SynchedProtocolParse(session_node *s,client_msg *msg)
       memcpy(name, msg->data + index + 2, len);
       name[len] = 0; /* null terminate string */
       index += 2 + len;
-      
+
       len = *(short *)(msg->data + index);
       if (index + 2 + len > msg->len)
          break;
@@ -212,9 +212,9 @@ void SynchedProtocolParse(session_node *s,client_msg *msg)
       memcpy(password, msg->data + index + 2, len);
       password[len] = 0; /* null terminate string */
       index += 2 + len;
-      
+
       SynchedAcceptLogin(s,name,password);
-      
+
       break;
    case AP_GETCLIENT :
       eprintf("SynchedProtocolParse AP_GETCLIENT no longer supported\n");
@@ -251,11 +251,11 @@ void SynchedProtocolParse(session_node *s,client_msg *msg)
   }
 */
       last_download_time = *(int *)(msg->data + index);
-      index += 4; 
-      
+      index += 4;
+
       pkkcatch = *(int *)(msg->data + index);
-      index += 4; 
-      
+      index += 4;
+
       len = *(short *)(msg->data+index);
       if (index + 2 + len > msg->len)
          break;
@@ -264,7 +264,7 @@ void SynchedProtocolParse(session_node *s,client_msg *msg)
       memcpy(name,msg->data+index+2,len);
       name[len] = 0; /* null terminate string */
       index += 2 + len;
-      
+
       SynchedGotoGame(s,last_download_time);
       break;
    case AP_REQ_ADMIN :
@@ -303,8 +303,8 @@ void SynchedProtocolParse(session_node *s,client_msg *msg)
    case AP_PING :
       /* they're there, so hangup timer reset, and we are done */
       break;
-      
-   default : 
+
+   default :
       eprintf("SynchedProtocolParse got invalid packet %u\n",msg->data[0]);
       break;
    }
@@ -337,7 +337,7 @@ void SynchedAcceptLogin(session_node *s,char *name,char *password)
          HangupSession(s);
          return;
       }
-      
+
       AddByteToPacket(AP_LOGINFAILED);
       SendPacket(s->session_id);
       return;
@@ -362,7 +362,7 @@ void SynchedAcceptLogin(session_node *s,char *name,char *password)
          return;
       }
    }
-   
+
    /* suspension still in effect? */
    if (a->suspend_time > now)
    {
@@ -373,11 +373,11 @@ void SynchedAcceptLogin(session_node *s,char *name,char *password)
       SendPacket(s->session_id);
       return;
    }
-   
+
    /* suspension lifted naturally? */
    if (a->suspend_time)
       SuspendAccountAbsolute(a, 0);
-   
+
    /* check if anyone already logged in on same account */
    other = GetSessionByAccount(a);
    if (other != NULL)
@@ -459,7 +459,7 @@ void VerifyLogin(session_node *s)
       str = LockConfigStr(UPDATE_CLIENT_MACHINE);
       AddStringToPacket(strlen(str),str);
       UnlockConfigStr();
-      
+
       str = LockConfigStr(UPDATE_CLIENT_FILE);
       AddStringToPacket(strlen(str),str);
       UnlockConfigStr();
@@ -470,13 +470,13 @@ void VerifyLogin(session_node *s)
    {
       SynchedDoMenu(s);
    }
- 
+
 }
 
 void LogUserData(session_node *s)
 {
    std::string buf;
-   
+
    buf += "LogUserData/4 got " + std::to_string(s->account->account_id) + " from " + s->conn.name + ", ";
 
    switch (s->os_type)
@@ -494,7 +494,7 @@ void LogUserData(session_node *s)
       buf += std::to_string(s->os_type);
       break;
    }
-   
+
    buf += ", " + std::to_string(s->os_version_major) + ", " + std::to_string(s->os_version_minor) + ", ";
 
    switch (s->machine_cpu&0xFFFF)	/* charlie: the cpu level is in the top 16 bits */
@@ -512,7 +512,7 @@ void LogUserData(session_node *s)
       buf += std::to_string(s->machine_cpu&0xFFFF);
       break;
    }
-   
+
    buf += ", ";
 
    buf += std::to_string(s->machine_ram/(1024*1024)) + " MB";
@@ -543,7 +543,7 @@ void LogUserData(session_node *s)
 void SynchedDoMenu(session_node *s)
 {
    SynchedSendMenuChoice(s);
-             
+
    AddByteToPacket(AP_CREDITS);
    /* round any fraction up */
    AddIntToPacket(20);
@@ -580,7 +580,7 @@ void SynchedGotoGame(session_node *s,int last_download_time)
 {
    int num_new_files;
    char *str;
-   
+
    /* first check to see if they can goto game (if they have >= 1 char) */
 
    if (CountUserByAccountID(s->account->account_id) <= 0)
@@ -607,11 +607,11 @@ void SynchedGotoGame(session_node *s,int last_download_time)
       AddByteToPacket(AP_DOWNLOAD);
 
       AddShortToPacket((short)num_new_files);
-      
+
       str = LockConfigStr(UPDATE_PACKAGE_MACHINE);
       AddStringToPacket(strlen(str),str);
       UnlockConfigStr();
-      
+
       str = LockConfigStr(UPDATE_PACKAGE_PATH);
       AddStringToPacket(strlen(str),str);
       UnlockConfigStr();
@@ -625,7 +625,7 @@ void SynchedGotoGame(session_node *s,int last_download_time)
       UnlockConfigStr();
 
       ForEachNewDLFile(s,SynchedSendDLFileInfo);
-      
+
       SendPacket(s->session_id);
 
       s->syn->download_count = num_new_files;
@@ -634,39 +634,58 @@ void SynchedGotoGame(session_node *s,int last_download_time)
       /* set timeout real long, since they're downloading */
       SetSessionTimer(s,60*ConfigInt(INACTIVE_TRANSFER));
 
-      return;      
+      return;
    }
 
    if (ConfigBool(SERVICE_ENABLED))
    {
       // Tell client how they could Put an FTP file for a service report.
+      std::string user_check, pass_check;
+      char *temp_str;
 
-      AddByteToPacket(AP_SERVICEREPORT);
-
-      str = LockConfigStr(SERVICE_MACHINE);
-      AddStringToPacket(strlen(str),str);
-      UnlockConfigStr();
-      
-      str = LockConfigStr(SERVICE_DIRECTORY);
-      AddStringToPacket(strlen(str),str);
+      temp_str = LockConfigStr(SERVICE_USERNAME);
+      if (temp_str != NULL)
+         user_check = temp_str;
       UnlockConfigStr();
 
-      str = LockConfigStr(SERVICE_USERNAME);
-      AddStringToPacket(strlen(str),str);
+      temp_str = LockConfigStr(SERVICE_PASSWORD);
+      if (temp_str != NULL)
+         pass_check = temp_str;
       UnlockConfigStr();
 
-      str = LockConfigStr(SERVICE_PASSWORD);
-      AddStringToPacket(strlen(str),str);
-      UnlockConfigStr();
+      if (!user_check.empty() && !pass_check.empty())
+      {
+         AddByteToPacket(AP_SERVICEREPORT);
 
-      SendPacket(s->session_id);
+         str = LockConfigStr(SERVICE_MACHINE);
+         AddStringToPacket(strlen(str),str);
+         UnlockConfigStr();
+
+         str = LockConfigStr(SERVICE_DIRECTORY);
+         AddStringToPacket(strlen(str),str);
+         UnlockConfigStr();
+
+         str = LockConfigStr(SERVICE_USERNAME);
+         AddStringToPacket(strlen(str),str);
+         UnlockConfigStr();
+
+         str = LockConfigStr(SERVICE_PASSWORD);
+         AddStringToPacket(strlen(str),str);
+         UnlockConfigStr();
+
+         SendPacket(s->session_id);
+      }
+      else
+      {
+         lprintf("Service enabled but credentials missing; not sending report info.\n");
+      }
    }
 
    // All set to go to game mode.
 
    AddByteToPacket(AP_GAME);
    SendPacket(s->session_id);
-   
+
    SetSessionState(s,STATE_GAME);
 }
 
