@@ -10,7 +10,7 @@
  *
 
   This module interprets compiled Blakod.
-  
+
 */
 
 #include "blakserv.h"
@@ -57,19 +57,21 @@ int InterpretAtMessage(int object_id,class_node* c,message_node* m,
 					   val_type *ret_val);
 __inline void StoreValue(int object_id,local_var_type *local_vars,int data_type,int data,
 						 val_type new_data);
-void InterpretUnaryAssign(int object_id,local_var_type *local_vars,opcode_type opcode);
-void InterpretBinaryAssign(int object_id,local_var_type *local_vars,opcode_type opcode);
-void InterpretGoto(int object_id,local_var_type *local_vars,
+__inline void StoreValue(object_node *o,local_var_type *local_vars,int data_type,int data,
+						 val_type new_data);
+void InterpretUnaryAssign(object_node *o,local_var_type *local_vars,opcode_type opcode);
+void InterpretBinaryAssign(object_node *o,local_var_type *local_vars,opcode_type opcode);
+void InterpretGoto(object_node *o,local_var_type *local_vars,
 				   opcode_type opcode,char *inst_start);
 void InterpretCall(int object_id,local_var_type *local_vars,opcode_type opcode);
 
 void InitProfiling(void)
 {
 	int i;
-	
+
 	if (done)
 		return;
-	
+
 	kod_stat.num_interpreted = 0;
 	kod_stat.num_interpreted_highest = 0;
 	kod_stat.billions_interpreted = 0;
@@ -85,34 +87,34 @@ void InitProfiling(void)
 	kod_stat.message_depth_highest = 0;
 	kod_stat.interpreting_class = INVALID_CLASS;
 	kod_stat.debugging = ConfigBool(DEBUG_UNINITIALIZED);
-	
+
 	for (i=0;i<MAX_C_FUNCTION;i++)
 		kod_stat.c_count[i] = 0;
-	
+
 	message_depth = 0;
-	
+
 	done = 1;
 }
 
 void InitBkodInterpret(void)
 {
 	int i;
-	
+
 	bkod = NULL;
-	
+
 	post_q.next = 0;
-	post_q.last = 0;   
-	
+	post_q.last = 0;
+
 	for (i=0;i<MAX_C_FUNCTION;i++)
 		ccall_table[i] = C_Invalid;
-	
+
 	ccall_table[CREATEOBJECT] = C_CreateObject;
-	ccall_table[ISCLASS] = C_IsClass; 
+	ccall_table[ISCLASS] = C_IsClass;
 	ccall_table[GETCLASS] = C_GetClass;
-	
+
 	ccall_table[SENDMESSAGE] = C_SendMessage;
 	ccall_table[POSTMESSAGE] = C_PostMessage;
-	
+
 	ccall_table[ADDPACKET] = C_AddPacket;
 	ccall_table[SENDPACKET] = C_SendPacket;
 	ccall_table[SENDCOPYPACKET] = C_SendCopyPacket;
@@ -134,17 +136,17 @@ void InitBkodInterpret(void)
 	ccall_table[BUILDSTRING] = C_BuildString;
 	ccall_table[STRINGLENGTH] = C_StringLength;
 	ccall_table[STRINGCONSISTSOF] = C_StringConsistsOf;
-	
+
 	ccall_table[CREATETIMER] = C_CreateTimer;
 	ccall_table[DELETETIMER] = C_DeleteTimer;
 	ccall_table[GETTIMEREMAINING] = C_GetTimeRemaining;
-	
+
 	ccall_table[CREATEROOMDATA] = C_LoadRoom;
 	ccall_table[ROOMDATA] = C_RoomData;
 	ccall_table[CANMOVEINROOM] = C_CanMoveInRoom;
 	ccall_table[CANMOVEINROOMFINE] = C_CanMoveInRoomFine;
 	ccall_table[POINTINSECTOR] = C_IsPointInSector;
-	
+
 	ccall_table[CONS] = C_Cons;
 	ccall_table[FIRST] = C_First;
 	ccall_table[REST] = C_Rest;
@@ -157,21 +159,21 @@ void InitBkodInterpret(void)
 	ccall_table[DELLISTELEM] = C_DelListElem;
 	ccall_table[FINDLISTELEM] = C_FindListElem;
 	ccall_table[MOVELISTELEM] = C_MoveListElem;
-	
+
 	ccall_table[GETTIME] = C_GetTime;
-	
+
 	ccall_table[CREATETABLE] = C_CreateTable;
 	ccall_table[ADDTABLEENTRY] = C_AddTableEntry;
 	ccall_table[GETTABLEENTRY] = C_GetTableEntry;
 	ccall_table[DELETETABLEENTRY] = C_DeleteTableEntry;
 	ccall_table[DELETETABLE] = C_DeleteTable;
-	
+
 	ccall_table[ISOBJECT] = C_IsObject;
-	
+
 	ccall_table[RECYCLEUSER] = C_RecycleUser;
-	
+
 	ccall_table[RANDOM] = C_Random;
-	
+
 	ccall_table[ABS] = C_Abs;
 	ccall_table[BOUND] = C_Bound;
 	ccall_table[SQRT] = C_Sqrt;
@@ -206,16 +208,16 @@ void TraceInfo(int session_id,const char *class_name,int message_id,int num_parm
 {
 	int i;
 	val_type val;
-	
+
 	SendSessionAdminText(session_id,"%-15s%-20s ",class_name,GetNameByID(message_id));
-	
+
 	for (i=0;i<num_parms;i++)
 	{
 		SendSessionAdminText(session_id,"%s = ",GetNameByID(parms[i].name_id));
 		val.int_val = parms[i].value;
 		SendSessionAdminText(session_id,"%s ",GetTagName(val));
 		SendSessionAdminText(session_id,"%s",GetDataName(val));
-		
+
 		if (i != num_parms-1)
 			SendSessionAdminText(session_id,", ");
 	}
@@ -225,7 +227,7 @@ void TraceInfo(int session_id,const char *class_name,int message_id,int num_parm
 void PostBlakodMessage(int object_id,int message_id,int num_parms,parm_node parms[])
 {
 	int i,new_next;
-	
+
 	new_next = (post_q.next + 1) % MAX_POST_QUEUE;
 	if (new_next == post_q.last)
 	{
@@ -251,48 +253,48 @@ blak_int SendTopLevelBlakodMessage(int object_id,int message_id,int num_parms,pa
 	int interp_time = 0;
 	int posts = 0;
 	int accumulated_num_interpreted = 0;
-	
+
 	if (message_depth != 0)
 	{
 		eprintf("SendTopLevelBlakodMessage called with message_depth %i\n",message_depth);
 	}
-	
+
 	kod_stat.debugging = ConfigBool(DEBUG_UNINITIALIZED);
-	
+
 	start_time = GetMilliCount();
 	kod_stat.num_top_level_messages++;
 	trace_session_id = INVALID_ID;
 	num_interpreted = 0;
-	
+
 	ret_val = SendBlakodMessage(object_id,message_id,num_parms,parms);
-	
+
 	while (post_q.next != post_q.last)
 	{
 		posts++;
-		
+
 		accumulated_num_interpreted += num_interpreted;
 		num_interpreted = 0;
-		
+
 		if (accumulated_num_interpreted > 10*ConfigInt(BLAKOD_MAX_STATEMENTS))
 		{
 			bprintf("SendTopLevelBlakodMessage too many instructions in posted followups\n");
-			
+
 			dprintf("SendTopLevelBlakodMessage too many instructions in posted followups\n");
 			dprintf("  OBJECT %i CLASS %s MESSAGE %s (%i) some followups are being aborted\n",
 				object_id,
 				GetClassByID(GetObjectByID(object_id)->class_id)->class_name,
 				GetNameByID(message_id), message_id);
-			
+
 			break;
 		}
-		
+
 		/* posted messages' return value is ignored */
 		SendBlakodMessage(post_q.data[post_q.last].object_id,post_q.data[post_q.last].message_id,
 			post_q.data[post_q.last].num_parms,post_q.data[post_q.last].parms);
-		
+
 		post_q.last = (post_q.last + 1) % MAX_POST_QUEUE;
 	}
-	
+
 	interp_time = (int)(GetMilliCount() - start_time);
 	kod_stat.interpreting_time += interp_time;
 	if (interp_time > kod_stat.interpreting_time_highest)
@@ -309,22 +311,22 @@ blak_int SendTopLevelBlakodMessage(int object_id,int message_id,int num_parms,pa
 		kod_stat.interpreting_time_object_id = object_id;
 		kod_stat.interpreting_time_posts = posts;
 	}
-	
+
 	if (num_interpreted > kod_stat.num_interpreted_highest)
 		kod_stat.num_interpreted_highest = num_interpreted;
-	
+
 	kod_stat.num_interpreted += num_interpreted;
 	if (kod_stat.num_interpreted > 1000000000L)
 	{
 		kod_stat.num_interpreted -= 1000000000L;
 		kod_stat.billions_interpreted++;
 	}
-	
+
 	if (message_depth != 0)
 	{
 		eprintf("SendTopLevelBlakodMessage returning with message_depth %i\n",message_depth);
 	}
-	
+
 	return ret_val;
 }
 
@@ -371,7 +373,7 @@ blak_int SendBlakodMessage(int object_id,int message_id,int num_parms,parm_node 
 	class_node *c,*propagate_class;
 	message_node *m;
 	val_type message_ret;
-	
+
 	int prev_interpreting_class;
 	char *prev_bkod;
 
@@ -379,14 +381,14 @@ blak_int SendBlakodMessage(int object_id,int message_id,int num_parms,parm_node 
 
 	prev_bkod = bkod;
 	prev_interpreting_class = kod_stat.interpreting_class;
-	
+
 	o = GetObjectByID(object_id);
 	if (o == NULL)
 	{
 		bprintf("SendBlakodMessage can't find OBJECT %i\n",object_id);
 		return NIL;
 	}
-	
+
 	c = GetClassByID(o->class_id);
 	if (c == NULL)
 	{
@@ -394,18 +396,18 @@ blak_int SendBlakodMessage(int object_id,int message_id,int num_parms,parm_node 
 			object_id,o->class_id);
 		return NIL;
 	}
-	
+
 	m = GetMessageByID(c->class_id,message_id,&c);
-	
+
 	if (m == NULL)
 	{
 		bprintf("SendBlakodMessage CLASS %s (%i) OBJECT %i can't find a handler for MESSAGE %s (%i)\n",
 			c->class_name,c->class_id,object_id,GetNameByID(message_id),message_id);
 		return NIL;
 	}
-	
+
 	m->called_count++;
-	
+
 	kod_stat.num_messages++;
 	stack[message_depth].class_id = c->class_id;
 	stack[message_depth].message_id = m->message_id;
@@ -418,40 +420,40 @@ blak_int SendBlakodMessage(int object_id,int message_id,int num_parms,parm_node 
 	message_depth++;
 	if (message_depth > kod_stat.message_depth_highest)
 		kod_stat.message_depth_highest = message_depth;
-	
+
 	if (message_depth >= MAX_DEPTH)
 	{
 		bprintf("SendBlakodMessage sending to CLASS %s (%i), depth is %i, aborted!\n",
 			c->class_name,c->class_id,message_depth);
-		
+
 		kod_stat.interpreting_class = prev_interpreting_class;
 		message_depth--;
 		bkod = prev_bkod;
-		
+
 		return NIL;
 	}
-	
+
 	if (m->trace_session_id != INVALID_ID)
 	{
 		trace_session_id = m->trace_session_id;
 		m->trace_session_id = INVALID_ID;
 	}
-	
+
 	if (trace_session_id != INVALID_ID)
 		TraceInfo(trace_session_id,c->class_name,m->message_id,num_parms,parms);
-	
+
 	kod_stat.interpreting_class = c->class_id;
-	
+
 	bkod = m->handler;
-	
+
 	propagate_depth = 1;
 
-	while (InterpretAtMessage(object_id,c,m,num_parms,parms,&message_ret) 
+	while (InterpretAtMessage(object_id,c,m,num_parms,parms,&message_ret)
 		== RETURN_PROPAGATE)
 	{
 		propagate_class = m->propagate_class;
 		m = m->propagate_message;
-		
+
 		if (m == NULL)
 		{
 			bprintf("SendBlakodMessage can't propagate MESSAGE %s (%i) in CLASS %s (%i)\n",
@@ -461,7 +463,7 @@ blak_int SendBlakodMessage(int object_id,int message_id,int num_parms,parm_node 
 			bkod = prev_bkod;
 			return NIL;
 		}
-		
+
 		if (propagate_class == NULL)
 		{
 			bprintf("SendBlakodMessage can't find class to propagate to, from "
@@ -471,22 +473,22 @@ blak_int SendBlakodMessage(int object_id,int message_id,int num_parms,parm_node 
 			bkod = prev_bkod;
 			return NIL;
 		}
-		
+
 		c = propagate_class;
-		
+
 		m->called_count++;
-		
+
 		if (m->trace_session_id != INVALID_ID)
 		{
 			trace_session_id = m->trace_session_id;
 			m->trace_session_id = INVALID_ID;
 		}
-		
+
 		if (trace_session_id != INVALID_ID)
 			TraceInfo(trace_session_id,"(propagate)",m->message_id,num_parms,parms);
-		
+
 		kod_stat.interpreting_class = c->class_id;
-		
+
 		stack[message_depth-1].bkod_ptr = bkod;
 
 		stack[message_depth].class_id = c->class_id;
@@ -501,11 +503,11 @@ blak_int SendBlakodMessage(int object_id,int message_id,int num_parms,parm_node 
 		bkod = m->handler;
 
 	}
-	
+
 	message_depth -= propagate_depth;
 	kod_stat.interpreting_class = prev_interpreting_class;
 	bkod = prev_bkod;
-	
+
 	return message_ret.int_val;
 }
 
@@ -539,14 +541,23 @@ int InterpretAtMessage(int object_id,class_node* c,message_node* m,
 	local_var_type local_vars;
 	int parm_id;
 	val_type parm_init_value;
-	
+
 	int i,j;
 	char *inst_start;
 	bool found_parm;
-	
+	object_node *o;
+
+	o = GetObjectByID(object_id);
+	if (o == NULL)
+	{
+		// Object deleted?
+		(*ret_val).int_val = NIL;
+		return RETURN_NO_PROPAGATE;
+	}
+
 	num_locals = get_byte();
 	num_parms = get_byte();
-	
+
 	local_vars.num_locals = num_locals+num_parms;
 	if (local_vars.num_locals > MAX_LOCALS)
 	{
@@ -558,26 +569,26 @@ int InterpretAtMessage(int object_id,class_node* c,message_node* m,
 		(*ret_val).int_val = NIL;
 		return RETURN_NO_PROPAGATE;
 	}
-	
+
 	if (ConfigBool(DEBUG_INITLOCALS))
 	{
 		parm_init_value.v.tag = TAG_INVALID;
 		parm_init_value.v.data = 1;
-		
+
 		for (i = 0; i < local_vars.num_locals; i++)
 		{
 			local_vars.locals[i] = parm_init_value;
 		}
 	}
-	
+
 	/* both table and call parms are sorted */
-	
+
 	j = 0;
 	for (i=0;i<num_parms;i++)
 	{
 		parm_id = get_int(); /* match this with parameters */
 		parm_init_value.int_val = get_blakint();
-		
+
 		/* look if we have a value for this parm */
 		found_parm = false;
 		j = 0;			/* don't assume sorted for now */
@@ -594,27 +605,27 @@ int InterpretAtMessage(int object_id,class_node* c,message_node* m,
 			}
 			j++;
 		}
-		
+
 		if (!found_parm)
 			local_vars.locals[i].int_val = parm_init_value.int_val;
 	}
-	
+
 	for(;;)			/* returns when gets a blakod return */
 	{
 		num_interpreted++;
-		
+
 		/* infinite loop check */
 		if (num_interpreted > ConfigInt(BLAKOD_MAX_STATEMENTS))
 		{
 			bprintf("InterpretAtMessage interpreted too many instructions--infinite loop?\n");
-			
+
 			dprintf("Infinite loop at depth %i\n", message_depth);
 			dprintf("  OBJECT %i CLASS %s MESSAGE %s (%s) aborting and returning NIL\n",
               object_id,
               c? c->class_name : "(unknown)",
               m? GetNameByID(m->message_id) : "(unknown)",
               BlakodDebugInfo().c_str());
-			
+
 			dprintf("  Local variables:\n");
 			for (i=0;i<local_vars.num_locals;i++)
 			{
@@ -623,50 +634,57 @@ int InterpretAtMessage(int object_id,class_node* c,message_node* m,
 					GetTagName(local_vars.locals[i]),
 					local_vars.locals[i].v.data);
 			}
-			
+
 			(*ret_val).int_val = NIL;
 			return RETURN_NO_PROPAGATE;
 		}
-		
+
 		opcode_char = get_byte();
-		
+
 		//memcpy(&opcode,&opcode_char,1);
 		{
 			char *ch=(char*)&opcode;
 			*ch = opcode_char ;
 		}
-		
+
 		/* use continues instead of breaks here since there is nothing
 		after the switch, for efficiency */
-		
+
 		switch (opcode.command)
 		{
-			case UNARY_ASSIGN : 
-				InterpretUnaryAssign(object_id,&local_vars,opcode);
+			case UNARY_ASSIGN :
+				InterpretUnaryAssign(o,&local_vars,opcode);
 				continue;
-			case BINARY_ASSIGN : 
-				InterpretBinaryAssign(object_id,&local_vars,opcode);
+			case BINARY_ASSIGN :
+				InterpretBinaryAssign(o,&local_vars,opcode);
 				continue;
-			case GOTO : 
+			case GOTO :
 				inst_start = bkod - 1; /* we've read one byte of instruction so far */
-				InterpretGoto(object_id,&local_vars,opcode,inst_start);
+				InterpretGoto(o,&local_vars,opcode,inst_start);
 				continue;
-			case CALL : 
+			case CALL :
 				InterpretCall(object_id,&local_vars,opcode);
+				o = GetObjectByID(object_id); // Refresh object pointer
+				if (o == NULL)
+				{
+					// Object deleted?
+					(*ret_val).int_val = NIL;
+					return RETURN_NO_PROPAGATE;
+				}
 				continue;
-			case RETURN : 
+			case RETURN :
 				if (opcode.dest == PROPAGATE)
 					return RETURN_PROPAGATE;
 				else
 				{
 					blak_int data;
-					data = get_blakint();	    
-					*ret_val = RetrieveValue(object_id,&local_vars,opcode.source1,data);
+					data = get_blakint();
+					*ret_val = RetrieveValue(o,&local_vars,opcode.source1,data);
 					return RETURN_NO_PROPAGATE;
 				}
 				/* can't get here */
 					continue;
-			default : 
+			default :
 				bprintf("InterpretAtMessage found INVALID OPCODE command %i.  die.\n", opcode.command);
 				FlushDefaultChannels();
 				continue;
@@ -682,17 +700,17 @@ __inline void StoreValue(int object_id,local_var_type *local_vars,int data_type,
 {
 	class_node *class_data;
 	object_node *o;
-	
+
 	if (kod_stat.debugging)
 	{
 		if (new_data.v.tag == TAG_INVALID)
 			eprintf("[%s] StoreValue trying to assign with uninitialized data (INVALID %" PRId64 ")\n",
               BlakodDebugInfo().c_str(),new_data.v.data);
 	}
-	
+
 	switch (data_type)
 	{
-	case LOCAL_VAR : 
+	case LOCAL_VAR :
 		if (data < 0 || data >= local_vars->num_locals)
 		{
 			eprintf("[%s] StoreValue can't write to illegal local var %i\n",
@@ -701,8 +719,8 @@ __inline void StoreValue(int object_id,local_var_type *local_vars,int data_type,
 		}
 		local_vars->locals[data].int_val = new_data.int_val;
 		break;
-		
-	case PROPERTY : 
+
+	case PROPERTY :
 		o = GetObjectByID(object_id);
 		if (o == NULL)
 		{
@@ -718,38 +736,93 @@ __inline void StoreValue(int object_id,local_var_type *local_vars,int data_type,
 			return;
 		}
 		/* equal to num_properties is ok, because self = prop 0 */
-		if (data < 0 || data > class_data->num_properties) 
+		if (data < 0 || data > class_data->num_properties)
 		{
 			eprintf("[%s] StoreValue can't write to illegal property %i (max %i)\n",
               BlakodDebugInfo().c_str(),data,class_data->num_properties);
 			return;
 		}
-		o->p[data].val.int_val = new_data.int_val; 
+		o->p[data].val.int_val = new_data.int_val;
 		break;
-		
+
 	default :
 		eprintf("[%s] StoreValue can't identify type %i\n",
-            BlakodDebugInfo().c_str(),data_type); 
+            BlakodDebugInfo().c_str(),data_type);
 		break;
 	}
 }
 
-void InterpretUnaryAssign(int object_id,local_var_type *local_vars,opcode_type opcode)
+__inline void StoreValue(object_node *o,local_var_type *local_vars,int data_type,int data,
+						 val_type new_data)
+{
+	class_node *class_data;
+
+	if (kod_stat.debugging)
+	{
+		if (new_data.v.tag == TAG_INVALID)
+			eprintf("[%s] StoreValue trying to assign with uninitialized data (INVALID %" PRId64 ")\n",
+              BlakodDebugInfo().c_str(),new_data.v.data);
+	}
+
+	switch (data_type)
+	{
+	case LOCAL_VAR :
+		if (data < 0 || data >= local_vars->num_locals)
+		{
+			eprintf("[%s] StoreValue can't write to illegal local var %i\n",
+              BlakodDebugInfo().c_str(),data);
+			return;
+		}
+		local_vars->locals[data].int_val = new_data.int_val;
+		break;
+
+	case PROPERTY :
+		if (o == NULL)
+		{
+			eprintf("[%s] StoreValue can't find object (NULL)\n",
+              BlakodDebugInfo().c_str());
+			return;
+		}
+		class_data = GetClassByID(o->class_id);
+		if (class_data == NULL)
+		{
+			eprintf("[%s] StoreValue can't find class id %i\n",
+              BlakodDebugInfo().c_str(),o->class_id);
+			return;
+		}
+		/* equal to num_properties is ok, because self = prop 0 */
+		if (data < 0 || data > class_data->num_properties)
+		{
+			eprintf("[%s] StoreValue can't write to illegal property %i (max %i)\n",
+              BlakodDebugInfo().c_str(),data,class_data->num_properties);
+			return;
+		}
+		o->p[data].val.int_val = new_data.int_val;
+		break;
+
+	default :
+		eprintf("[%s] StoreValue can't identify type %i\n",
+            BlakodDebugInfo().c_str(),data_type);
+		break;
+	}
+}
+
+void InterpretUnaryAssign(object_node *o,local_var_type *local_vars,opcode_type opcode)
 {
 	char info;
 	int dest;
 	blak_int source;
 	val_type source_data;
-	
+
 	info = get_byte();
 	dest = get_int();
 	source = get_blakint();
-	
-	source_data = RetrieveValue(object_id,local_vars,opcode.source1,source);
-	
+
+	source_data = RetrieveValue(o,local_vars,opcode.source1,source);
+
 	switch (info)
 	{
-	case NOT : 
+	case NOT :
 		if (source_data.v.tag != TAG_INT)
 		{
 			bprintf("InterpretUnaryAssign can't not non-int %s\n",
@@ -778,37 +851,37 @@ void InterpretUnaryAssign(int object_id,local_var_type *local_vars,opcode_type o
 		}
 		source_data.v.data = ~source_data.v.data;
 		break;
-		
+
 	default :
 		bprintf("InterpretUnaryAssign can't perform unary op %i\n",info);
 		break;
 	}
-	
-	StoreValue(object_id,local_vars,opcode.dest,dest,source_data);
+
+	StoreValue(o,local_vars,opcode.dest,dest,source_data);
 }
 
-void InterpretBinaryAssign(int object_id,local_var_type *local_vars,opcode_type opcode)
+void InterpretBinaryAssign(object_node *o,local_var_type *local_vars,opcode_type opcode)
 {
 	char info;
   int dest;
 	blak_int source1,source2;
 	val_type source1_data,source2_data;
-	
+
 	info = get_byte();
 	dest = get_int();
 	source1 = get_blakint();
 	source2 = get_blakint();
-	
-	source1_data = RetrieveValue(object_id,local_vars,opcode.source1,source1);
-	source2_data = RetrieveValue(object_id,local_vars,opcode.source2,source2);
-	
+
+	source1_data = RetrieveValue(o,local_vars,opcode.source1,source1);
+	source2_data = RetrieveValue(o,local_vars,opcode.source2,source2);
+
 	/*
 	if (source1_data.v.tag != source2_data.v.tag)
 	bprintf("InterpretBinaryAssign is operating on 2 diff types!\n");
 	*/
 	switch (info)
 	{
-	case ADD : 
+	case ADD :
 		if (source1_data.v.tag != TAG_INT || source2_data.v.tag != TAG_INT)
 		{
 			bprintf("InterpretBinaryAssign can't add 2 vars %s and %s\n",
@@ -862,7 +935,7 @@ void InterpretBinaryAssign(int object_id,local_var_type *local_vars,opcode_type 
 			break;
 		}
 		source1_data.v.data = abs(source1_data.v.data % source2_data.v.data);
-		
+
 		break;
 	case AND :
 		if (source1_data.v.tag != TAG_INT || source2_data.v.tag != TAG_INT)
@@ -882,13 +955,13 @@ void InterpretBinaryAssign(int object_id,local_var_type *local_vars,opcode_type 
 		}
 		source1_data.v.data = source1_data.v.data || source2_data.v.data;
 		break;
-		
+
 	case EQUAL :
-		
+
 #if 0
 		// disabled:  used to be only TAG_NIL vs TAG_X, or TAG_X vs TAG_X is legal
 		// now:  TAG_X vs TAG_Y is legal, and returns FALSE for equal
-		
+
 		if (source1_data.v.tag != source2_data.v.tag &&
 			source1_data.v.tag != TAG_NIL && source2_data.v.tag != TAG_NIL)
 		{
@@ -897,20 +970,20 @@ void InterpretBinaryAssign(int object_id,local_var_type *local_vars,opcode_type 
 			break;
 		}
 #endif
-		
+
 		if (source1_data.v.tag != source2_data.v.tag)
 			source1_data.v.data = false;
 		else
 			source1_data.v.data = source1_data.v.data == source2_data.v.data;
 		source1_data.v.tag = TAG_INT;
 		break;
-		
+
 	case NOT_EQUAL :
-		
+
 #if 0
 		// disabled:  used to be only TAG_NIL vs TAG_X, or TAG_X vs TAG_X is legal
 		// now:  TAG_X vs TAG_Y is legal, and returns TRUE for not equal
-		
+
 		if (source1_data.v.tag != source2_data.v.tag &&
 			source1_data.v.tag != TAG_NIL && source2_data.v.tag != TAG_NIL)
 		{
@@ -919,9 +992,9 @@ void InterpretBinaryAssign(int object_id,local_var_type *local_vars,opcode_type 
 			break;
 		}
 #endif
-		
+
 		if (source1_data.v.tag != source2_data.v.tag)
-			source1_data.v.data = true; 
+			source1_data.v.data = true;
 		else
 			source1_data.v.data = source1_data.v.data != source2_data.v.data;
 		source1_data.v.tag = TAG_INT;
@@ -984,22 +1057,22 @@ void InterpretBinaryAssign(int object_id,local_var_type *local_vars,opcode_type 
 		bprintf("InterpretBinaryAssign can't perform binary op %i\n",info);
 		break;
    }
-   
-   StoreValue(object_id,local_vars,opcode.dest,dest,source1_data);
+
+   StoreValue(o,local_vars,opcode.dest,dest,source1_data);
 }
 
-void InterpretGoto(int object_id,local_var_type *local_vars,
+void InterpretGoto(object_node *o,local_var_type *local_vars,
 				   opcode_type opcode,char *inst_start)
 {
 	int dest_addr;
 	blak_int var_check;
 	val_type check_data;
-	
+
 	/* This function is called often, so the switch has been
     * optimized away to return the value immediately. */
-	
+
 	dest_addr = get_int();
-	
+
 	/* unconditional gotos have source2 bits set--otherwise, it's a goto
 	only if the source1 bits have a non-zero var */
 	if (opcode.source2 == GOTO_UNCONDITIONAL)
@@ -1007,9 +1080,9 @@ void InterpretGoto(int object_id,local_var_type *local_vars,
 		bkod = inst_start + dest_addr;
 		return;
 	}
-	
+
 	var_check = get_blakint();
-	check_data = RetrieveValue(object_id,local_vars,opcode.source1,var_check);
+	check_data = RetrieveValue(o,local_vars,opcode.source1,var_check);
 	if ((opcode.dest == GOTO_IF_TRUE && check_data.v.data != 0) ||
 		(opcode.dest == GOTO_IF_FALSE && check_data.v.data == 0))
 		bkod = inst_start + dest_addr;
@@ -1017,17 +1090,17 @@ void InterpretGoto(int object_id,local_var_type *local_vars,
 
 void InterpretCall(int object_id,local_var_type *local_vars,opcode_type opcode)
 {
-	parm_node normal_parm_array[MAX_C_PARMS],name_parm_array[MAX_NAME_PARMS]; 
+	parm_node normal_parm_array[MAX_C_PARMS],name_parm_array[MAX_NAME_PARMS];
 	unsigned char info,num_normal_parms,num_name_parms,initial_type;
 	blak_int initial_value;
 	val_type call_return;
-	
+
 	val_type name_val;
 	int assign_index;
 	int i;
-	
+
 	info = get_byte(); /* get function id */
-	
+
 	switch(opcode.source1)
 	{
 	case CALL_NO_ASSIGN :
@@ -1037,9 +1110,9 @@ void InterpretCall(int object_id,local_var_type *local_vars,opcode_type opcode)
 		assign_index = get_int();
 		break;
 	}
-	
+
 	num_normal_parms = get_byte();
-	
+
 	if (num_normal_parms > MAX_C_PARMS)
 	{
 		bprintf("InterpretCall found a call w/ more than %i parms, DEATH\n",
@@ -1047,15 +1120,15 @@ void InterpretCall(int object_id,local_var_type *local_vars,opcode_type opcode)
 		FlushDefaultChannels();
 		num_normal_parms = MAX_C_PARMS;
 	}
-	
+
 	for (i=0;i<num_normal_parms;i++)
 	{
 		normal_parm_array[i].type = get_byte();
 		normal_parm_array[i].value = get_blakint();
 	}
-	
+
 	num_name_parms = get_byte();
-	
+
 	if (num_name_parms > MAX_NAME_PARMS)
 	{
 		bprintf("InterpretCall found a call w/ more than %i name parms, DEATH\n",
@@ -1063,38 +1136,38 @@ void InterpretCall(int object_id,local_var_type *local_vars,opcode_type opcode)
 		FlushDefaultChannels();
 		num_name_parms = MAX_NAME_PARMS;
 	}
-	
+
 	for (i=0;i<num_name_parms;i++)
 	{
 		name_parm_array[i].name_id = get_int();
-		
+
 		initial_type = get_byte();
 		initial_value = get_blakint();
-		
+
 		/* translate to literal now, because won't have local vars
 		if nested call to sendmessage again */
-		
+
 		/* maybe only need to do this in call to sendmessage and postmessage? */
-		
+
 		name_val = RetrieveValue(object_id,local_vars,initial_type,initial_value);
-		
+
 		name_parm_array[i].value = name_val.int_val;
 	}
-	
+
 	/* increment count of the c function, for profiling info */
 	kod_stat.c_count[info]++;
-	
+
 	call_return.int_val = ccall_table[info](object_id,local_vars,num_normal_parms,
 					   normal_parm_array,num_name_parms,
 					   name_parm_array);
-	
+
 	switch(opcode.source1)
 	{
 		case CALL_NO_ASSIGN :
 			break;
 		case CALL_ASSIGN_LOCAL_VAR :
 		case CALL_ASSIGN_PROPERTY :
-			StoreValue(object_id,local_vars,opcode.source1,assign_index,call_return);      
+			StoreValue(object_id,local_vars,opcode.source1,assign_index,call_return);
 			break;
 	}
 }
@@ -1160,7 +1233,7 @@ std::string BlakodStackInfo()
         s += class_name;
         s += "::";
         s += GetNameByID(stack[i].message_id);
-                 
+
 				s += "(";
 				for (int j=0;j<stack[i].num_parms;j++)
 				{
@@ -1195,4 +1268,3 @@ std::string BlakodStackInfo()
 	}
 	return buf;
 }
-
