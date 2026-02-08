@@ -180,4 +180,84 @@ val_type __inline RetrieveValue(int object_id,local_var_type *local_vars,int dat
    return ret_val;
 }
 
+val_type __inline RetrieveValue(object_node *o,local_var_type *local_vars,int data_type,blak_int data)
+{
+   class_node *c;
+   val_type ret_val;
+
+   /* This function is called very very often, so the switch has been
+    * optimized away to return the value immediately. */
+
+   if (data_type == LOCAL_VAR)
+   {
+      if (GetKodStats()->debugging)
+      {
+	 if (local_vars->locals[data].v.tag == TAG_INVALID)
+	    eprintf("[%s] RetrieveValue got value of local or parameter that was uninitialized (INVALID %" PRId64 ")\n",
+              BlakodDebugInfo().c_str(),local_vars->locals[data].v.data);
+      }
+      return *(val_type *)&local_vars->locals[data].int_val;
+   }
+
+   if (data_type == PROPERTY)
+   {
+      if (o == NULL)
+      {
+        eprintf("[%s] RetrieveValue can't find OBJECT (NULL)\n",BlakodDebugInfo().c_str());
+	 ret_val.int_val = NIL;
+	 return ret_val;
+      }
+      if (GetKodStats()->debugging)
+      {
+	 if (o->p[data].val.v.tag == TAG_INVALID)
+	    eprintf("[%s] RetrieveValue got value of property that was uninitialized (INVALID %" PRId64 ")\n",
+              BlakodDebugInfo().c_str(),local_vars->locals[data].v.data);
+      }
+      return *(val_type *)&o->p[data].val.int_val;
+   }
+
+   if (data_type == CONSTANT)
+      return *(val_type *)&data;
+
+   if (data_type == CLASS_VAR)
+   {
+      if (o == NULL)
+      {
+	 eprintf("[%s] RetrieveValue class var can't find OBJECT (NULL)\n",
+           BlakodDebugInfo().c_str());
+	 ret_val.int_val = NIL;
+	 return ret_val;
+      }
+
+      c = GetClassByID(o->class_id);
+      if (c == NULL)
+      {
+	 eprintf("[%s] RetrieveValue can't find CLASS %i for OBJECT %i\n",
+           BlakodDebugInfo().c_str(),o->class_id,o->object_id);
+	 ret_val.int_val = NIL;
+	 return ret_val;
+      }
+      if (data >= c->num_vars || data < 0)
+      {
+	 eprintf("[%s] RetrieveValue can't retrieve invalid class var %" PRId64 " in OBJECT %i CLASS %s (%i)\n",
+           BlakodDebugInfo().c_str(),data,o->object_id,c->class_name,c->class_id);
+	 ret_val.int_val = NIL;
+	 return ret_val;
+      }
+      ret_val = c->vars[data].val;
+      if (ret_val.v.tag == TAG_OVERRIDE)
+      {
+	 /* if it's a class var, but overridden in this class by property */
+	 return *(val_type *)&o->p[ret_val.v.data].val.int_val;
+      }
+      return ret_val;
+   }
+
+   bprintf("[%s] RetrieveValue can't identify type %i\n",
+           BlakodDebugInfo().c_str(),data_type);
+
+   ret_val.int_val = NIL;
+   return ret_val;
+}
+
 #endif
