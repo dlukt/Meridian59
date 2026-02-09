@@ -58,11 +58,12 @@ static void CleanupTempFile(int fd, const std::vector<char> &path_buffer)
 static bool CollectRscCallback(const char *filename, int resource_num, const char *string)
 {
     (void)filename;
-    if (rsc_callback_count < kMaxRscCallbacks)
+    if (rsc_callback_count >= kMaxRscCallbacks)
     {
-        rsc_resource_nums[rsc_callback_count] = resource_num;
-        rsc_resource_strings[rsc_callback_count] = string;
+        return false;
     }
+    rsc_resource_nums[rsc_callback_count] = resource_num;
+    rsc_resource_strings[rsc_callback_count] = string;
     rsc_callback_count++;
     return true;
 }
@@ -230,7 +231,8 @@ static int test_rscload_reads_resources(void)
 
     constexpr unsigned char kRscMagicVersion = 0x01;
     const unsigned char magic[] = {'R', 'S', 'C', kRscMagicVersion};
-    int version = 4;
+    constexpr int kRscTestVersion = 4;
+    int version = kRscTestVersion;
     int num_resources = 2;
     int resource_num = 10;
     const char *first = "hello";
