@@ -29,21 +29,28 @@ static std::string rsc_resource_strings[kMaxRscCallbacks];
 static int CreateTempFile(const char *template_suffix, std::vector<char> &path_buffer)
 {
     std::error_code error;
-    std::filesystem::path temp_path = std::filesystem::temp_directory_path(error);
+    std::filesystem::path temp_dir = std::filesystem::temp_directory_path(error);
     if (error)
     {
         return -1;
     }
 
-    std::string temp_path_string = temp_path.string();
-    if (!temp_path_string.empty() && temp_path_string.back() != '/')
+    std::string temp_dir_string = temp_dir.string();
+    if (!temp_dir_string.empty() && temp_dir_string.back() != '/')
     {
-        temp_path_string += '/';
+        temp_dir_string += '/';
     }
-    temp_path_string += template_suffix;
-    path_buffer.assign(temp_path_string.begin(), temp_path_string.end());
+    temp_dir_string += template_suffix;
+    path_buffer.assign(temp_dir_string.begin(), temp_dir_string.end());
     path_buffer.push_back('\0');
     return mkstemp(path_buffer.data());
+}
+
+static int HandleTempFileOpenFailure(int fd, const std::vector<char> &path_buffer)
+{
+    close(fd);
+    unlink(path_buffer.data());
+    return 1;
 }
 
 static bool CollectRscCallback(const char *filename, int resource_num, const char *string)
@@ -215,9 +222,7 @@ static int test_rscload_reads_resources(void)
     FILE *file = fdopen(fd, "wb");
     if (file == NULL)
     {
-        close(fd);
-        unlink(path_buffer.data());
-        ASSERT_TRUE(false);
+        return HandleTempFileOpenFailure(fd, path_buffer);
     }
 
     const unsigned char magic[] = {0x52, 0x53, 0x43, 0x01};
@@ -262,9 +267,7 @@ static int test_rscload_rejects_bad_magic(void)
     FILE *file = fdopen(fd, "wb");
     if (file == NULL)
     {
-        close(fd);
-        unlink(path_buffer.data());
-        ASSERT_TRUE(false);
+        return HandleTempFileOpenFailure(fd, path_buffer);
     }
 
     const unsigned char bad_magic[] = {0x00, 0x00, 0x00, 0x00};
