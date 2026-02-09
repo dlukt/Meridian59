@@ -38,7 +38,7 @@ static void ResetRscCallbackState(void)
     }
 }
 
-static int CreateTempFileWithPath(const char *template_suffix, std::vector<char> &path_buffer)
+static int OpenTempFileWithPath(const char *template_suffix, std::vector<char> &path_buffer)
 {
     std::error_code error;
     std::filesystem::path temp_dir = std::filesystem::temp_directory_path(error);
@@ -229,7 +229,7 @@ static int test_get_milli_count_monotonic(void)
 static int test_rscload_reads_resources(void)
 {
     std::vector<char> path_buffer;
-    int fd = CreateTempFileWithPath("meridian_rscXXXXXX", path_buffer);
+    int fd = OpenTempFileWithPath("meridian_rscXXXXXX", path_buffer);
 
     ASSERT_TRUE(fd != -1);
 
@@ -237,8 +237,8 @@ static int test_rscload_reads_resources(void)
     if (file == NULL)
     {
         CleanupTempFile(fd, path_buffer);
+        return 1;
     }
-    ASSERT_TRUE(file != NULL);
 
     int version = kRscFormatVersion;
     int num_resources = kRscTestResources;
@@ -274,7 +274,7 @@ static int test_rscload_reads_resources(void)
 static int test_rscload_rejects_bad_magic(void)
 {
     std::vector<char> path_buffer;
-    int fd = CreateTempFileWithPath("meridian_rsc_badXXXXXX", path_buffer);
+    int fd = OpenTempFileWithPath("meridian_rsc_badXXXXXX", path_buffer);
 
     ASSERT_TRUE(fd != -1);
 
@@ -282,8 +282,8 @@ static int test_rscload_rejects_bad_magic(void)
     if (file == NULL)
     {
         CleanupTempFile(fd, path_buffer);
+        return 1;
     }
-    ASSERT_TRUE(file != NULL);
 
     const unsigned char bad_magic[] = {0x00, 0x00, 0x00, 0x00};
     ASSERT_TRUE(fwrite(bad_magic, 1, sizeof(bad_magic), file) == sizeof(bad_magic));
