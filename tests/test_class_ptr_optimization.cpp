@@ -38,6 +38,10 @@ static int test_object_node_has_class_ptr_field(void)
 /*
  * Test 2: Verify RetrieveValue declaration exists with object_node* parameter
  * This verifies the optimization is present at the declaration level
+ * 
+ * Note: A full functional test would require mocking the entire Blakod runtime,
+ * which is beyond the scope of unit tests. The optimization's correctness is
+ * validated by manual testing with the full server (see TESTING.md).
  */
 static int test_retrieve_value_signature_supports_object_ptr(void)
 {
@@ -56,18 +60,25 @@ static int test_retrieve_value_signature_supports_object_ptr(void)
 
 /*
  * Test 3: Verify struct layout is reasonable
+ * Note: Assumes 64-bit architecture (8-byte pointers). On 32-bit systems,
+ * the size will be smaller due to 4-byte pointers.
  */
 static int test_object_node_layout(void)
 {
     // Verify that the struct hasn't grown unreasonably
     size_t obj_size = sizeof(object_node);
     
-    // object_node should contain: object_id (4), class_id (4), class_ptr (8),
-    // deleted (1), garbage_ref (4), num_props (4), p (8) = ~33 bytes + padding
-    ASSERT_TRUE(obj_size >= 32);  // At least the expected fields
-    ASSERT_TRUE(obj_size <= 64);  // Not bloated with excessive padding
+    // object_node should contain: object_id (4), class_id (4), class_ptr (8 on 64-bit),
+    // deleted (1), garbage_ref (4), num_props (4), p (8 on 64-bit) = ~33 bytes + padding
+    // On 32-bit: class_ptr (4) and p (4) = ~25 bytes + padding
+    size_t ptr_size = sizeof(void*);
+    size_t expected_min = 24 + ptr_size;  // Scale with pointer size
+    size_t expected_max = 64;              // Reasonable upper bound
     
-    printf("  ✓ object_node size is %zu bytes (reasonable)\n", obj_size);
+    ASSERT_TRUE(obj_size >= expected_min);
+    ASSERT_TRUE(obj_size <= expected_max);
+    
+    printf("  ✓ object_node size is %zu bytes (pointer size: %zu)\n", obj_size, ptr_size);
     return 0;
 }
 

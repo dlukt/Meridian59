@@ -9,7 +9,7 @@ The PR adds a `class_node *class_ptr` field to the `object_node` structure. This
 ### Files Changed
 - `blakserv/object.h` - Added `class_ptr` field to `object_node` struct
 - `blakserv/object.c` - Set `class_ptr` during object allocation and moves
-- `blakserv/sendmsg.h` - Updated `RetrieveValue` to use cached `class_ptr`
+- `blakserv/sendmsg.h` - Updated inline `RetrieveValue` implementation to use cached `class_ptr`
 
 ## Automated Tests
 
