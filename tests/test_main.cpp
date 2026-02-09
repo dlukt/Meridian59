@@ -47,12 +47,8 @@ static int CreateTempFileWithPath(const char *template_suffix, std::vector<char>
         return -1;
     }
 
-    std::string temp_dir_string = temp_dir.string();
-    if (!temp_dir_string.empty() && temp_dir_string.back() != '/')
-    {
-        temp_dir_string += '/';
-    }
-    temp_dir_string += template_suffix;
+    std::filesystem::path temp_template = temp_dir / template_suffix;
+    std::string temp_dir_string = temp_template.string();
     path_buffer.assign(temp_dir_string.begin(), temp_dir_string.end());
     path_buffer.push_back('\0');
     return mkstemp(path_buffer.data());
@@ -241,8 +237,8 @@ static int test_rscload_reads_resources(void)
     if (file == NULL)
     {
         CleanupTempFile(fd, path_buffer);
-        return 1;
     }
+    ASSERT_TRUE(file != NULL);
 
     int version = kRscFormatVersion;
     int num_resources = kRscTestResources;
@@ -286,8 +282,8 @@ static int test_rscload_rejects_bad_magic(void)
     if (file == NULL)
     {
         CleanupTempFile(fd, path_buffer);
-        return 1;
     }
+    ASSERT_TRUE(file != NULL);
 
     const unsigned char bad_magic[] = {0x00, 0x00, 0x00, 0x00};
     ASSERT_TRUE(fwrite(bad_magic, 1, sizeof(bad_magic), file) == sizeof(bad_magic));
