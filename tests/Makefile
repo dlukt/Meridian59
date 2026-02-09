@@ -2,7 +2,7 @@ CXX ?= g++
 CXXFLAGS ?= -std=c++20 -x c++ -Wall -Wextra -I../include -DBLAK_PLATFORM_LINUX
 
 TARGET = unit_tests
-SOURCES = test_main.cpp ../util/crc.c ../util/md5.c ../blakserv/time.c
+SOURCES = test_main.cpp ../util/crc.c ../util/md5.c ../util/rscload.c ../blakserv/time.c
 
 all: $(TARGET)
 
