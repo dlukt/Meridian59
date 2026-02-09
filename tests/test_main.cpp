@@ -6,6 +6,7 @@
 #include "../blakserv/btime.h"
 #include "crc.h"
 #include "md5.h"
+#include "rscload.h"
 #include "test_framework.h"
 
 static std::string TrimTrailingSpaces(std::string value)
@@ -15,6 +16,22 @@ static std::string TrimTrailingSpaces(std::string value)
         value.pop_back();
     }
     return value;
+}
+
+static int rsc_callback_count = 0;
+static int rsc_resource_nums[4];
+static std::string rsc_resource_strings[4];
+
+static bool CollectRscCallback(const char *filename, int resource_num, const char *string)
+{
+    (void)filename;
+    if (rsc_callback_count < 4)
+    {
+        rsc_resource_nums[rsc_callback_count] = resource_num;
+        rsc_resource_strings[rsc_callback_count] = string;
+    }
+    rsc_callback_count++;
+    return true;
 }
 
 static int test_crc32_known_value(void)
@@ -164,6 +181,77 @@ static int test_get_milli_count_monotonic(void)
     return 0;
 }
 
+static int test_rscload_reads_resources(void)
+{
+    char filename[] = "/tmp/meridian_rscXXXXXX";
+    int fd = mkstemp(filename);
+
+    ASSERT_TRUE(fd != -1);
+
+    FILE *file = fdopen(fd, "wb");
+    if (file == NULL)
+    {
+        close(fd);
+        unlink(filename);
+        ASSERT_TRUE(false);
+    }
+
+    const unsigned char magic[] = {0x52, 0x53, 0x43, 0x01};
+    int version = 4;
+    int num_resources = 2;
+    int resource_num = 10;
+    const char *first = "hello";
+    const char *second = "world";
+
+    ASSERT_TRUE(fwrite(magic, 1, sizeof(magic), file) == sizeof(magic));
+    ASSERT_TRUE(fwrite(&version, 1, sizeof(version), file) == sizeof(version));
+    ASSERT_TRUE(fwrite(&num_resources, 1, sizeof(num_resources), file) == sizeof(num_resources));
+
+    ASSERT_TRUE(fwrite(&resource_num, 1, sizeof(resource_num), file) == sizeof(resource_num));
+    ASSERT_TRUE(fwrite(first, 1, strlen(first) + 1, file) == strlen(first) + 1);
+
+    resource_num = 20;
+    ASSERT_TRUE(fwrite(&resource_num, 1, sizeof(resource_num), file) == sizeof(resource_num));
+    ASSERT_TRUE(fwrite(second, 1, strlen(second) + 1, file) == strlen(second) + 1);
+
+    fclose(file);
+
+    rsc_callback_count = 0;
+    ASSERT_TRUE(RscFileLoad(filename, CollectRscCallback));
+    ASSERT_TRUE(rsc_callback_count == 2);
+    ASSERT_TRUE(rsc_resource_nums[0] == 10);
+    ASSERT_TRUE(rsc_resource_strings[0] == "hello");
+    ASSERT_TRUE(rsc_resource_nums[1] == 20);
+    ASSERT_TRUE(rsc_resource_strings[1] == "world");
+
+    unlink(filename);
+    return 0;
+}
+
+static int test_rscload_rejects_bad_magic(void)
+{
+    char filename[] = "/tmp/meridian_rsc_badXXXXXX";
+    int fd = mkstemp(filename);
+
+    ASSERT_TRUE(fd != -1);
+
+    FILE *file = fdopen(fd, "wb");
+    if (file == NULL)
+    {
+        close(fd);
+        unlink(filename);
+        ASSERT_TRUE(false);
+    }
+
+    const unsigned char bad_magic[] = {0x00, 0x00, 0x00, 0x00};
+    ASSERT_TRUE(fwrite(bad_magic, 1, sizeof(bad_magic), file) == sizeof(bad_magic));
+    fclose(file);
+
+    ASSERT_TRUE(!RscFileLoad(filename, CollectRscCallback));
+    unlink(filename);
+    return 0;
+}
+
 int main(void)
 {
     int tests_run = 0;
@@ -180,6 +268,8 @@ int main(void)
     failures += run_test("test_relative_time_format", test_relative_time_format, &tests_run);
     failures += run_test("test_relative_time_with_days", test_relative_time_with_days, &tests_run);
     failures += run_test("test_get_milli_count_monotonic", test_get_milli_count_monotonic, &tests_run);
+    failures += run_test("test_rscload_reads_resources", test_rscload_reads_resources, &tests_run);
+    failures += run_test("test_rscload_rejects_bad_magic", test_rscload_rejects_bad_magic, &tests_run);
 
     if (failures != 0)
     {
