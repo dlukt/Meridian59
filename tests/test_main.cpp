@@ -30,6 +30,19 @@ static int test_crc32_known_value(void)
     return 0;
 }
 
+static int test_crc32_empty_string(void)
+{
+    const char *input = "";
+    size_t length = strlen(input);
+    unsigned int result;
+
+    ASSERT_TRUE(length <= INT_MAX);
+    result = CRC32(input, (int)length);
+
+    ASSERT_EQ_UINT(0U, result);
+    return 0;
+}
+
 static int test_crc32_incremental(void)
 {
     const char *input = "Meridian59";
@@ -50,6 +63,29 @@ static int test_crc32_incremental(void)
     return 0;
 }
 
+static int test_crc32_incremental_matches_full(void)
+{
+    const char *input = "Meridian 59 unit tests";
+    unsigned int mask = 0xFFFFFFFFU;
+    size_t length = strlen(input);
+    int length_int;
+    unsigned int expected;
+    unsigned int crc = mask;
+    int split = 5;
+
+    ASSERT_TRUE(length <= INT_MAX);
+    length_int = (int)length;
+
+    expected = CRC32(input, length_int);
+
+    crc = CRC32Incremental(crc, input, split);
+    crc = CRC32Incremental(crc, input + split, length_int - split);
+    crc ^= mask;
+
+    ASSERT_EQ_UINT(expected, crc);
+    return 0;
+}
+
 static int test_md5_standard_value(void)
 {
     const char *input = "test";
@@ -57,6 +93,20 @@ static int test_md5_standard_value(void)
     unsigned char expected[ENCRYPT_LEN] = {
         0x09, 0x8f, 0x6b, 0xcd, 0x46, 0x21, 0xd3, 0x73,
         0xca, 0xde, 0x4e, 0x83, 0x26, 0x27, 0xb4, 0xf6
+    };
+
+    MDString(input, digest);
+    ASSERT_EQ_MEM(expected, digest, ENCRYPT_LEN);
+    return 0;
+}
+
+static int test_md5_abc_value(void)
+{
+    const char *input = "abc";
+    unsigned char digest[ENCRYPT_LEN];
+    unsigned char expected[ENCRYPT_LEN] = {
+        0x90, 0x01, 0x50, 0x98, 0x3c, 0xd2, 0x4f, 0xb0,
+        0xd6, 0x96, 0x3f, 0x7d, 0x28, 0xe1, 0x7f, 0x72
     };
 
     MDString(input, digest);
@@ -96,6 +146,15 @@ static int test_relative_time_format(void)
     return 0;
 }
 
+static int test_relative_time_with_days(void)
+{
+    const int sample_time = (2 * 24 * 60 * 60) + (3 * 60 * 60) + (4 * 60) + 5;
+
+    ASSERT_TRUE(TrimTrailingSpaces(RelativeTimeStr(sample_time)) ==
+        "2 days 3 hours 4 minutes 5 seconds");
+    return 0;
+}
+
 static int test_get_milli_count_monotonic(void)
 {
     UINT64 first = GetMilliCount();
@@ -111,11 +170,15 @@ int main(void)
     int failures = 0;
 
     failures += run_test("test_crc32_known_value", test_crc32_known_value, &tests_run);
+    failures += run_test("test_crc32_empty_string", test_crc32_empty_string, &tests_run);
     failures += run_test("test_crc32_incremental", test_crc32_incremental, &tests_run);
+    failures += run_test("test_crc32_incremental_matches_full", test_crc32_incremental_matches_full, &tests_run);
     failures += run_test("test_md5_standard_value", test_md5_standard_value, &tests_run);
+    failures += run_test("test_md5_abc_value", test_md5_abc_value, &tests_run);
     failures += run_test("test_md5_zero_byte_replacement", test_md5_zero_byte_replacement, &tests_run);
     failures += run_test("test_time_strings_zero", test_time_strings_zero, &tests_run);
     failures += run_test("test_relative_time_format", test_relative_time_format, &tests_run);
+    failures += run_test("test_relative_time_with_days", test_relative_time_with_days, &tests_run);
     failures += run_test("test_get_milli_count_monotonic", test_get_milli_count_monotonic, &tests_run);
 
     if (failures != 0)
