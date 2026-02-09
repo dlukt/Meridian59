@@ -26,7 +26,7 @@ static int rsc_callback_count = 0;
 static int rsc_resource_nums[kMaxRscCallbacks];
 static std::string rsc_resource_strings[kMaxRscCallbacks];
 
-static int CreateTempFile(const char *template_suffix, std::vector<char> &path_buffer)
+static int OpenTempFile(const char *template_suffix, std::vector<char> &path_buffer)
 {
     std::error_code error;
     std::filesystem::path temp_dir = std::filesystem::temp_directory_path(error);
@@ -46,7 +46,7 @@ static int CreateTempFile(const char *template_suffix, std::vector<char> &path_b
     return mkstemp(path_buffer.data());
 }
 
-static int HandleTempFileOpenFailure(int fd, const std::vector<char> &path_buffer)
+static int CleanupTempFileOnFdopenFailure(int fd, const std::vector<char> &path_buffer)
 {
     close(fd);
     unlink(path_buffer.data());
@@ -215,17 +215,17 @@ static int test_get_milli_count_monotonic(void)
 static int test_rscload_reads_resources(void)
 {
     std::vector<char> path_buffer;
-    int fd = CreateTempFile("meridian_rscXXXXXX", path_buffer);
+    int fd = OpenTempFile("meridian_rscXXXXXX", path_buffer);
 
     ASSERT_TRUE(fd != -1);
 
     FILE *file = fdopen(fd, "wb");
     if (file == NULL)
     {
-        return HandleTempFileOpenFailure(fd, path_buffer);
+        return CleanupTempFileOnFdopenFailure(fd, path_buffer);
     }
 
-    const unsigned char magic[] = {0x52, 0x53, 0x43, 0x01};
+    const unsigned char magic[] = {'R', 'S', 'C', 0x01};
     int version = 4;
     int num_resources = 2;
     int resource_num = 10;
@@ -260,14 +260,14 @@ static int test_rscload_reads_resources(void)
 static int test_rscload_rejects_bad_magic(void)
 {
     std::vector<char> path_buffer;
-    int fd = CreateTempFile("meridian_rsc_badXXXXXX", path_buffer);
+    int fd = OpenTempFile("meridian_rsc_badXXXXXX", path_buffer);
 
     ASSERT_TRUE(fd != -1);
 
     FILE *file = fdopen(fd, "wb");
     if (file == NULL)
     {
-        return HandleTempFileOpenFailure(fd, path_buffer);
+        return CleanupTempFileOnFdopenFailure(fd, path_buffer);
     }
 
     const unsigned char bad_magic[] = {0x00, 0x00, 0x00, 0x00};
