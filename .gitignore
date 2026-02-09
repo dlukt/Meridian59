@@ -31,6 +31,8 @@ bin/rscprint.exe
 bin/waveplay.dll
 tests/unit_tests
 tests/unit_tests.exe
+tests/test_class_ptr_optimization
+tests/test_class_ptr_optimization.exe
 install/meridian59-installer.exe
 roomedit/windeu32.log
 resource/rooms/*~
