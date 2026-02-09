@@ -46,11 +46,13 @@ static int CreateTempFileDescriptor(const char *template_suffix, std::vector<cha
     return mkstemp(path_buffer.data());
 }
 
-static int CleanupTempFile(int fd, const std::vector<char> &path_buffer)
+static void CleanupTempFile(int fd, const std::vector<char> &path_buffer)
 {
-    close(fd);
+    if (fd != -1)
+    {
+        close(fd);
+    }
     unlink(path_buffer.data());
-    return 1;
 }
 
 static bool CollectRscCallback(const char *filename, int resource_num, const char *string)
@@ -222,7 +224,8 @@ static int test_rscload_reads_resources(void)
     FILE *file = fdopen(fd, "wb");
     if (file == NULL)
     {
-        return CleanupTempFile(fd, path_buffer);
+        CleanupTempFile(fd, path_buffer);
+        return 1;
     }
 
     constexpr unsigned char kRscMagicVersion = 0x01;
@@ -254,7 +257,7 @@ static int test_rscload_reads_resources(void)
     ASSERT_TRUE(rsc_resource_nums[1] == 20);
     ASSERT_TRUE(rsc_resource_strings[1] == "world");
 
-    unlink(path_buffer.data());
+    CleanupTempFile(-1, path_buffer);
     return 0;
 }
 
@@ -268,7 +271,8 @@ static int test_rscload_rejects_bad_magic(void)
     FILE *file = fdopen(fd, "wb");
     if (file == NULL)
     {
-        return CleanupTempFile(fd, path_buffer);
+        CleanupTempFile(fd, path_buffer);
+        return 1;
     }
 
     const unsigned char bad_magic[] = {0x00, 0x00, 0x00, 0x00};
@@ -276,7 +280,7 @@ static int test_rscload_rejects_bad_magic(void)
     fclose(file);
 
     ASSERT_TRUE(!RscFileLoad(path_buffer.data(), CollectRscCallback));
-    unlink(path_buffer.data());
+    CleanupTempFile(-1, path_buffer);
     return 0;
 }
 
