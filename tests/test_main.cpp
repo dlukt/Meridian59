@@ -242,8 +242,8 @@ static int test_rscload_reads_resources(void)
     if (file == NULL)
     {
         CleanupTempFile(fd, path_buffer);
+        return 1;
     }
-    ASSERT_TRUE(file != NULL);
 
     int version = kRscFormatVersion;
     int num_resources = kRscTestResources;
@@ -287,8 +287,8 @@ static int test_rscload_rejects_bad_magic(void)
     if (file == NULL)
     {
         CleanupTempFile(fd, path_buffer);
+        return 1;
     }
-    ASSERT_TRUE(file != NULL);
 
     const unsigned char bad_magic[] = {0x00, 0x00, 0x00, 0x00};
     ASSERT_TRUE(fwrite(bad_magic, 1, sizeof(bad_magic), file) == sizeof(bad_magic));
