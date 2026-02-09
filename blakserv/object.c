@@ -38,7 +38,7 @@ void ResetObject()
    {
       if (!objects[i].deleted)
       {
-	 c = GetClassByID(objects[i].class_id);
+	 c = objects[i].class_ptr;
 	 if (c == NULL)
 	 {
 	    eprintf("ResetObject can't find class id %i\n",objects[i].class_id);
@@ -103,6 +103,7 @@ int AllocateObject(int class_id)
 
    objects[num_objects].object_id = num_objects;
    objects[num_objects].class_id = class_id;
+   objects[num_objects].class_ptr = c;
    objects[num_objects].deleted = false;
    objects[num_objects].num_props = 1 + c->num_properties;
    objects[num_objects].p = (prop_type *)AllocateMemory(MALLOC_ID_OBJECT_PROPERTIES,
@@ -387,6 +388,7 @@ void MoveObject(int dest_id,int source_id)
 
    /* don't change the dest id here--it is set to array index, correctly */
    dest->class_id = source->class_id;
+   dest->class_ptr = source->class_ptr;
    dest->deleted = source->deleted;
    dest->garbage_ref = source->garbage_ref;
    dest->num_props = source->num_props;

@@ -149,7 +149,7 @@ val_type __inline RetrieveValue(int object_id,local_var_type *local_vars,int dat
 	 return ret_val;
       }
 
-      c = GetClassByID(o->class_id);
+      c = o->class_ptr;
       if (c == NULL)
       {
 	 eprintf("[%s] RetrieveValue can't find CLASS %i for OBJECT %i\n",
@@ -229,7 +229,7 @@ val_type __inline RetrieveValue(object_node *o,local_var_type *local_vars,int da
 	 return ret_val;
       }
 
-      c = GetClassByID(o->class_id);
+      c = o->class_ptr;
       if (c == NULL)
       {
 	 eprintf("[%s] RetrieveValue can't find CLASS %i for OBJECT %i\n",

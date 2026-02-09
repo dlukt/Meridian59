@@ -25,6 +25,7 @@ typedef struct
 {
    int object_id;
    int class_id;
+   class_node *class_ptr;
    bool deleted;
    int garbage_ref;
    int num_props; /* used by garbage collect */
