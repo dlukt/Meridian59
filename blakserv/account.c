@@ -138,7 +138,7 @@ int CreateAccountSecurePassword(const char *name,const char *password,int type)
 
    index = 0;
    const char *ptr = password;
-   while (sscanf(ptr,"%02x",&ch) == 1)
+   while (index < sizeof(buf) - 1 && sscanf(ptr,"%02x",&ch) == 1)
    {
       buf[index++] = ch;
       ptr += 2;
@@ -169,7 +169,7 @@ int RecreateAccountSecurePassword(int account_id,char *name,char *password,int t
 
    index = 0;
    ptr = password;
-   while (sscanf(ptr,"%02x",&ch) == 1)
+   while (index < sizeof(buf) - 1 && sscanf(ptr,"%02x",&ch) == 1)
    {
       buf[index++] = ch;
       ptr += 2;
