@@ -21,22 +21,24 @@ static std::string TrimTrailingSpaces(std::string value)
     return value;
 }
 
-constexpr int kMaxRscCallbacks = 4;
+constexpr int kRscTestResources = 2;
+constexpr unsigned char kRscMagicBytes[] = {'R', 'S', 'C', 0x01};
+constexpr int kRscFormatVersion = 4;
 static int rsc_callback_count = 0;
-static int rsc_resource_nums[kMaxRscCallbacks];
-static std::string rsc_resource_strings[kMaxRscCallbacks];
+static int rsc_resource_nums[kRscTestResources];
+static std::string rsc_resource_strings[kRscTestResources];
 
 static void ResetRscCallbackState(void)
 {
     rsc_callback_count = 0;
-    for (int i = 0; i < kMaxRscCallbacks; ++i)
+    for (int i = 0; i < kRscTestResources; ++i)
     {
         rsc_resource_nums[i] = 0;
         rsc_resource_strings[i].clear();
     }
 }
 
-static int CreateTempFileDescriptor(const char *template_suffix, std::vector<char> &path_buffer)
+static int CreateTempFileWithPath(const char *template_suffix, std::vector<char> &path_buffer)
 {
     std::error_code error;
     std::filesystem::path temp_dir = std::filesystem::temp_directory_path(error);
@@ -71,7 +73,7 @@ static void CleanupTempFile(int fd, const std::vector<char> &path_buffer)
 static bool CollectRscCallback(const char *filename, int resource_num, const char *string)
 {
     (void)filename;
-    if (rsc_callback_count >= kMaxRscCallbacks)
+    if (rsc_callback_count >= kRscTestResources)
     {
         return false;
     }
@@ -231,7 +233,7 @@ static int test_get_milli_count_monotonic(void)
 static int test_rscload_reads_resources(void)
 {
     std::vector<char> path_buffer;
-    int fd = CreateTempFileDescriptor("meridian_rscXXXXXX", path_buffer);
+    int fd = CreateTempFileWithPath("meridian_rscXXXXXX", path_buffer);
 
     ASSERT_TRUE(fd != -1);
 
@@ -242,16 +244,13 @@ static int test_rscload_reads_resources(void)
         return 1;
     }
 
-    constexpr unsigned char kRscMagicSuffix = 0x01;
-    const unsigned char magic[] = {'R', 'S', 'C', kRscMagicSuffix};
-    constexpr int kRscFormatVersion = 4;
     int version = kRscFormatVersion;
-    int num_resources = 2;
+    int num_resources = kRscTestResources;
     int resource_num = 10;
     const char *first = "hello";
     const char *second = "world";
 
-    ASSERT_TRUE(fwrite(magic, 1, sizeof(magic), file) == sizeof(magic));
+    ASSERT_TRUE(fwrite(kRscMagicBytes, 1, sizeof(kRscMagicBytes), file) == sizeof(kRscMagicBytes));
     ASSERT_TRUE(fwrite(&version, 1, sizeof(version), file) == sizeof(version));
     ASSERT_TRUE(fwrite(&num_resources, 1, sizeof(num_resources), file) == sizeof(num_resources));
 
@@ -266,7 +265,7 @@ static int test_rscload_reads_resources(void)
 
     ResetRscCallbackState();
     ASSERT_TRUE(RscFileLoad(path_buffer.data(), CollectRscCallback));
-    ASSERT_TRUE(rsc_callback_count == 2);
+    ASSERT_TRUE(rsc_callback_count == kRscTestResources);
     ASSERT_TRUE(rsc_resource_nums[0] == 10);
     ASSERT_TRUE(rsc_resource_strings[0] == "hello");
     ASSERT_TRUE(rsc_resource_nums[1] == 20);
@@ -279,7 +278,7 @@ static int test_rscload_reads_resources(void)
 static int test_rscload_rejects_bad_magic(void)
 {
     std::vector<char> path_buffer;
-    int fd = CreateTempFileDescriptor("meridian_rsc_badXXXXXX", path_buffer);
+    int fd = CreateTempFileWithPath("meridian_rsc_badXXXXXX", path_buffer);
 
     ASSERT_TRUE(fd != -1);
 
