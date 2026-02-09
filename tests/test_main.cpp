@@ -38,7 +38,7 @@ static void ResetRscCallbackState(void)
     }
 }
 
-static int OpenTempFileAndStorePath(const char *template_suffix, std::vector<char> &path_buffer)
+static int CreateTempFile(const char *template_suffix, std::vector<char> &path_buffer)
 {
     std::error_code error;
     std::filesystem::path temp_dir = std::filesystem::temp_directory_path(error);
@@ -51,7 +51,12 @@ static int OpenTempFileAndStorePath(const char *template_suffix, std::vector<cha
     std::string temp_dir_string = temp_template.string();
     path_buffer.assign(temp_dir_string.begin(), temp_dir_string.end());
     path_buffer.push_back('\0');
-    return mkstemp(path_buffer.data());
+    int fd = mkstemp(path_buffer.data());
+    if (fd == -1)
+    {
+        perror("mkstemp");
+    }
+    return fd;
 }
 
 static void CleanupTempFile(int fd, const std::vector<char> &path_buffer)
@@ -229,7 +234,7 @@ static int test_get_milli_count_monotonic(void)
 static int test_rscload_reads_resources(void)
 {
     std::vector<char> path_buffer;
-    int fd = OpenTempFileAndStorePath("meridian_rscXXXXXX", path_buffer);
+    int fd = CreateTempFile("meridian_rscXXXXXX", path_buffer);
 
     ASSERT_TRUE(fd != -1);
 
@@ -237,8 +242,8 @@ static int test_rscload_reads_resources(void)
     if (file == NULL)
     {
         CleanupTempFile(fd, path_buffer);
-        ASSERT_TRUE(false);
     }
+    ASSERT_TRUE(file != NULL);
 
     int version = kRscFormatVersion;
     int num_resources = kRscTestResources;
@@ -274,7 +279,7 @@ static int test_rscload_reads_resources(void)
 static int test_rscload_rejects_bad_magic(void)
 {
     std::vector<char> path_buffer;
-    int fd = OpenTempFileAndStorePath("meridian_rsc_badXXXXXX", path_buffer);
+    int fd = CreateTempFile("meridian_rsc_badXXXXXX", path_buffer);
 
     ASSERT_TRUE(fd != -1);
 
@@ -282,8 +287,8 @@ static int test_rscload_rejects_bad_magic(void)
     if (file == NULL)
     {
         CleanupTempFile(fd, path_buffer);
-        ASSERT_TRUE(false);
     }
+    ASSERT_TRUE(file != NULL);
 
     const unsigned char bad_magic[] = {0x00, 0x00, 0x00, 0x00};
     ASSERT_TRUE(fwrite(bad_magic, 1, sizeof(bad_magic), file) == sizeof(bad_magic));
