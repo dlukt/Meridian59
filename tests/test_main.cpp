@@ -26,6 +26,16 @@ static int rsc_callback_count = 0;
 static int rsc_resource_nums[kMaxRscCallbacks];
 static std::string rsc_resource_strings[kMaxRscCallbacks];
 
+static void ResetRscCallbackState(void)
+{
+    rsc_callback_count = 0;
+    for (int i = 0; i < kMaxRscCallbacks; ++i)
+    {
+        rsc_resource_nums[i] = 0;
+        rsc_resource_strings[i].clear();
+    }
+}
+
 static int CreateTempFileDescriptor(const char *template_suffix, std::vector<char> &path_buffer)
 {
     std::error_code error;
@@ -52,7 +62,10 @@ static void CleanupTempFile(int fd, const std::vector<char> &path_buffer)
     {
         close(fd);
     }
-    unlink(path_buffer.data());
+    if (!path_buffer.empty())
+    {
+        unlink(path_buffer.data());
+    }
 }
 
 static bool CollectRscCallback(const char *filename, int resource_num, const char *string)
@@ -229,10 +242,10 @@ static int test_rscload_reads_resources(void)
         return 1;
     }
 
-    constexpr unsigned char kRscMagicVersion = 0x01;
-    const unsigned char magic[] = {'R', 'S', 'C', kRscMagicVersion};
-    constexpr int kRscTestVersion = 4;
-    int version = kRscTestVersion;
+    constexpr unsigned char kRscMagicSuffix = 0x01;
+    const unsigned char magic[] = {'R', 'S', 'C', kRscMagicSuffix};
+    constexpr int kRscFormatVersion = 4;
+    int version = kRscFormatVersion;
     int num_resources = 2;
     int resource_num = 10;
     const char *first = "hello";
@@ -251,7 +264,7 @@ static int test_rscload_reads_resources(void)
 
     fclose(file);
 
-    rsc_callback_count = 0;
+    ResetRscCallbackState();
     ASSERT_TRUE(RscFileLoad(path_buffer.data(), CollectRscCallback));
     ASSERT_TRUE(rsc_callback_count == 2);
     ASSERT_TRUE(rsc_resource_nums[0] == 10);
@@ -281,6 +294,7 @@ static int test_rscload_rejects_bad_magic(void)
     ASSERT_TRUE(fwrite(bad_magic, 1, sizeof(bad_magic), file) == sizeof(bad_magic));
     fclose(file);
 
+    ResetRscCallbackState();
     ASSERT_TRUE(!RscFileLoad(path_buffer.data(), CollectRscCallback));
     CleanupTempFile(-1, path_buffer);
     return 0;
