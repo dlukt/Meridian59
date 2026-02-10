@@ -59,9 +59,9 @@ __inline void StoreValue(int object_id,local_var_type *local_vars,int data_type,
 						 val_type new_data);
 __inline void StoreValue(object_node *o,local_var_type *local_vars,int data_type,int data,
 						 val_type new_data);
-void InterpretUnaryAssign(object_node *o,local_var_type *local_vars,opcode_type opcode);
-void InterpretBinaryAssign(object_node *o,local_var_type *local_vars,opcode_type opcode);
-void InterpretGoto(object_node *o,local_var_type *local_vars,
+static __inline void InterpretUnaryAssign(object_node *o,local_var_type *local_vars,opcode_type opcode);
+static __inline void InterpretBinaryAssign(object_node *o,local_var_type *local_vars,opcode_type opcode);
+static __inline void InterpretGoto(object_node *o,local_var_type *local_vars,
 				   opcode_type opcode,char *inst_start);
 void InterpretCall(int object_id,local_var_type *local_vars,opcode_type opcode);
 
@@ -610,12 +610,14 @@ int InterpretAtMessage(int object_id,class_node* c,message_node* m,
 			local_vars.locals[i].int_val = parm_init_value.int_val;
 	}
 
+	int max_statements = ConfigInt(BLAKOD_MAX_STATEMENTS);
+
 	for(;;)			/* returns when gets a blakod return */
 	{
 		num_interpreted++;
 
 		/* infinite loop check */
-		if (num_interpreted > ConfigInt(BLAKOD_MAX_STATEMENTS))
+		if (num_interpreted > max_statements)
 		{
 			bprintf("InterpretAtMessage interpreted too many instructions--infinite loop?\n");
 
@@ -807,7 +809,7 @@ __inline void StoreValue(object_node *o,local_var_type *local_vars,int data_type
 	}
 }
 
-void InterpretUnaryAssign(object_node *o,local_var_type *local_vars,opcode_type opcode)
+static __inline void InterpretUnaryAssign(object_node *o,local_var_type *local_vars,opcode_type opcode)
 {
 	char info;
 	int dest;
@@ -860,7 +862,7 @@ void InterpretUnaryAssign(object_node *o,local_var_type *local_vars,opcode_type 
 	StoreValue(o,local_vars,opcode.dest,dest,source_data);
 }
 
-void InterpretBinaryAssign(object_node *o,local_var_type *local_vars,opcode_type opcode)
+static __inline void InterpretBinaryAssign(object_node *o,local_var_type *local_vars,opcode_type opcode)
 {
 	char info;
   int dest;
@@ -1061,7 +1063,7 @@ void InterpretBinaryAssign(object_node *o,local_var_type *local_vars,opcode_type
    StoreValue(o,local_vars,opcode.dest,dest,source1_data);
 }
 
-void InterpretGoto(object_node *o,local_var_type *local_vars,
+static __inline void InterpretGoto(object_node *o,local_var_type *local_vars,
 				   opcode_type opcode,char *inst_start)
 {
 	int dest_addr;
