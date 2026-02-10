@@ -11,6 +11,7 @@
 #include "md5.h"
 #include "rscload.h"
 #include "test_framework.h"
+#include "test_json_utils.h"
 
 static std::string TrimTrailingSpaces(std::string value)
 {
@@ -318,6 +319,7 @@ int main(void)
     failures += run_test("test_get_milli_count_monotonic", test_get_milli_count_monotonic, &tests_run);
     failures += run_test("test_rscload_reads_resources", test_rscload_reads_resources, &tests_run);
     failures += run_test("test_rscload_rejects_bad_magic", test_rscload_rejects_bad_magic, &tests_run);
+    failures += run_test("test_json_escape", test_json_escape, &tests_run);
 
     if (failures != 0)
     {

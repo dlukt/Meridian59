@@ -19,6 +19,7 @@
 #include "blakserv.h"
 #define FMT_HEADER_ONLY
 #include "fmt/format.h"
+#include "json_utils.h"
 
 #define iswhite(c) ((c)==' ' || (c)=='\t' || (c)=='\n' || (c)=='\r')
 
@@ -2613,7 +2614,7 @@ blak_int C_SendWebhook(int object_id, local_var_type *local_vars,
     
     // Start building JSON: {"event": "EventName", "params": {
     std::string json = "{\"event\":\"";
-    json.append(event_name, event_len);
+    json += JsonEscape(std::string(event_name, event_len));
     json += "\",\"params\":{";
     
     // Process remaining parameters as key-value pairs
@@ -2641,21 +2642,15 @@ blak_int C_SendWebhook(int object_id, local_var_type *local_vars,
         
         // Add key
         json += "\"";
-        json.append(key_str, key_len);
+        json += JsonEscape(std::string(key_str, key_len));
         json += "\":";
         
         // Handle different value types
         if (value_val.v.tag == TAG_STRING || value_val.v.tag == TAG_TEMP_STRING || 
             value_val.v.tag == TAG_RESOURCE) {
             if (LookupString(value_val, "C_SendWebhook", &value_str, &value_len)) {
-                // Escape quotes in the string value
                 json += "\"";
-                for (int j = 0; j < value_len; j++) {
-                    if (value_str[j] == '\"' || value_str[j] == '\\') {
-                        json += '\\';
-                    }
-                    json += value_str[j];
-                }
+                json += JsonEscape(std::string(value_str, value_len));
                 json += "\"";
             } else {
                 json += "null";
