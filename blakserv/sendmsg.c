@@ -55,15 +55,15 @@ int done;
 int InterpretAtMessage(int object_id,class_node* c,message_node* m,
 					   int num_sent_parms,parm_node sent_parms[],
 					   val_type *ret_val);
-__inline void StoreValue(int object_id,local_var_type *local_vars,int data_type,int data,
+static __inline void StoreValue(int object_id,local_var_type *local_vars,int data_type,int data,
 						 val_type new_data);
-__inline void StoreValue(object_node *o,local_var_type *local_vars,int data_type,int data,
+static __inline void StoreValue(object_node *o,local_var_type *local_vars,int data_type,int data,
 						 val_type new_data);
 static __inline void InterpretUnaryAssign(object_node *o,local_var_type *local_vars,opcode_type opcode);
 static __inline void InterpretBinaryAssign(object_node *o,local_var_type *local_vars,opcode_type opcode);
 static __inline void InterpretGoto(object_node *o,local_var_type *local_vars,
 				   opcode_type opcode,char *inst_start);
-void InterpretCall(int object_id,local_var_type *local_vars,opcode_type opcode);
+static __inline void InterpretCall(int object_id,local_var_type *local_vars,opcode_type opcode);
 
 void InitProfiling(void)
 {
@@ -697,7 +697,7 @@ int InterpretAtMessage(int object_id,class_node* c,message_node* m,
 /* RetrieveValue used to be here, but is inline, and used in ccode.c too, so it's
 in sendmsg.h now */
 
-__inline void StoreValue(int object_id,local_var_type *local_vars,int data_type,int data,
+static __inline void StoreValue(int object_id,local_var_type *local_vars,int data_type,int data,
 						 val_type new_data)
 {
 	class_node *class_data;
@@ -754,7 +754,7 @@ __inline void StoreValue(int object_id,local_var_type *local_vars,int data_type,
 	}
 }
 
-__inline void StoreValue(object_node *o,local_var_type *local_vars,int data_type,int data,
+static __inline void StoreValue(object_node *o,local_var_type *local_vars,int data_type,int data,
 						 val_type new_data)
 {
 	class_node *class_data;
@@ -1090,7 +1090,7 @@ static __inline void InterpretGoto(object_node *o,local_var_type *local_vars,
 		bkod = inst_start + dest_addr;
 }
 
-void InterpretCall(int object_id,local_var_type *local_vars,opcode_type opcode)
+static __inline void InterpretCall(int object_id,local_var_type *local_vars,opcode_type opcode)
 {
 	parm_node normal_parm_array[MAX_C_PARMS],name_parm_array[MAX_NAME_PARMS];
 	unsigned char info,num_normal_parms,num_name_parms,initial_type;
