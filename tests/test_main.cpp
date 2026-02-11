@@ -12,6 +12,7 @@
 #include "rscload.h"
 #include "test_framework.h"
 #include "test_json_utils.h"
+#include "test_parse_logic.h"
 
 static std::string TrimTrailingSpaces(std::string value)
 {
@@ -320,6 +321,11 @@ int main(void)
     failures += run_test("test_rscload_reads_resources", test_rscload_reads_resources, &tests_run);
     failures += run_test("test_rscload_rejects_bad_magic", test_rscload_rejects_bad_magic, &tests_run);
     failures += run_test("test_json_escape", test_json_escape, &tests_run);
+    failures += run_test("test_parse_logic_basic", test_parse_logic_basic, &tests_run);
+    failures += run_test("test_parse_logic_multiple_delimiters", test_parse_logic_multiple_delimiters, &tests_run);
+    failures += run_test("test_parse_logic_leading_trailing_delimiters", test_parse_logic_leading_trailing_delimiters, &tests_run);
+    failures += run_test("test_parse_logic_different_delimiters", test_parse_logic_different_delimiters, &tests_run);
+    failures += run_test("test_parse_logic_empty", test_parse_logic_empty, &tests_run);
 
     if (failures != 0)
     {

@@ -1024,20 +1024,38 @@ blak_int C_ParseString(int object_id,local_var_type *local_vars,
 	p[0].value = string_val.int_val;
 	p[0].name_id = STRING_PARM;
 	
-	each_str = strtok(snod->data,separators);
-	while (each_str != NULL)
-	{
-	/* move the parsed string to beginning of the temp string for kod's use.
-	also, fake the length on it for kod's sake.  Doesn't matter to
-		us because we null terminated the real string*/
-		
-		strcpy(snod->data,each_str);
-		snod->len_data = (int) strlen(snod->data);
-		
-		SendBlakodMessage(object_id,callback_val.v.data,1,p);
-		
-		each_str = strtok(NULL,separators);
-	}
+   // Copy the string to parse to a local buffer, to avoid re-entrancy issues
+   // with strtok and to avoid the callback modifying the string we're parsing
+   // (since snod points to the global temp_str).
+   std::string str_to_parse = snod->data;
+   const char *input = str_to_parse.c_str();
+   const char *token = input;
+
+   // Skip leading delimiters
+   token += strspn(token, separators);
+
+   while (*token != '\0')
+   {
+      // Find end of token
+      size_t token_len = strcspn(token, separators);
+
+      // Copy token to temp string for callback
+      if (token_len >= LEN_TEMP_STRING)
+         token_len = LEN_TEMP_STRING - 1;
+
+      memcpy(snod->data, token, token_len);
+      snod->data[token_len] = '\0';
+      snod->len_data = (int)token_len;
+
+      SendBlakodMessage(object_id,callback_val.v.data,1,p);
+
+      // Advance past token
+      token += token_len;
+
+      // Skip delimiters (strcspn stops at first delimiter, so we need to skip it/them)
+      token += strspn(token, separators);
+   }
+
 	return NIL;
 }
 
