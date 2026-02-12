@@ -13,6 +13,7 @@
 #include "test_framework.h"
 #include "test_json_utils.h"
 #include "test_parse_logic.h"
+#include "test_term.h"
 
 static std::string TrimTrailingSpaces(std::string value)
 {
@@ -326,6 +327,9 @@ int main(void)
     failures += run_test("test_parse_logic_leading_trailing_delimiters", test_parse_logic_leading_trailing_delimiters, &tests_run);
     failures += run_test("test_parse_logic_different_delimiters", test_parse_logic_different_delimiters, &tests_run);
     failures += run_test("test_parse_logic_empty", test_parse_logic_empty, &tests_run);
+
+    // Run term.c tests
+    run_term_tests(&tests_run, &failures);
 
     if (failures != 0)
     {
