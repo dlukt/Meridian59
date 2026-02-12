@@ -730,7 +730,8 @@ static __inline void StoreValue(int object_id,local_var_type *local_vars,int dat
               BlakodDebugInfo().c_str(),object_id);
 			return;
 		}
-		class_data = GetClassByID(o->class_id);
+		// Optimization: use cached class pointer instead of lookup
+		class_data = o->class_ptr;
 		if (class_data == NULL)
 		{
 			eprintf("[%s] StoreValue can't find class id %i\n",
@@ -785,7 +786,8 @@ static __inline void StoreValue(object_node *o,local_var_type *local_vars,int da
               BlakodDebugInfo().c_str());
 			return;
 		}
-		class_data = GetClassByID(o->class_id);
+		// Optimization: use cached class pointer instead of lookup
+		class_data = o->class_ptr;
 		if (class_data == NULL)
 		{
 			eprintf("[%s] StoreValue can't find class id %i\n",
