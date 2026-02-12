@@ -641,9 +641,28 @@
 #define IDS_INTRO                       3651
 #define ID_FONT_ANNOTATIONS             3652
 #define IDC_ANNOTATION_ZOOM_LIMIT       3653
+#define IDS_TOOLTIP_SCROLLLOCK          4000
+#define IDS_TOOLTIP_DRAWNAMES           4001
+#define IDS_TOOLTIP_INV_RARITY          4002
+#define IDS_TOOLTIP_TOOLTIPS            4003
+#define IDS_TOOLTIP_PAIN                4004
+#define IDS_TOOLTIP_INVNUM              4005
+#define IDS_TOOLTIP_SAFETY              4006
+#define IDS_TOOLTIP_BOUNCE              4007
+#define IDS_TOOLTIP_TOOLBAR             4008
+#define IDS_TOOLTIP_LAGBOX              4009
+#define IDS_TOOLTIP_SPINNING_CUBE       4010
+#define IDS_TOOLTIP_PROFANE             4011
+#define IDS_TOOLTIP_DRAWMAP             4012
+#define IDS_TOOLTIP_MUSIC               4013
+#define IDS_TOOLTIP_SOUNDFX             4014
+#define IDS_TOOLTIP_LOOPSOUNDS          4015
+#define IDS_TOOLTIP_RANDSOUNDS          4016
+#define IDS_TOOLTIP_COLORCODES          4017
+#define IDS_TOOLTIP_TARGETHALO          4018
 
 // Next default values for new objects
-// 
+//
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        191
