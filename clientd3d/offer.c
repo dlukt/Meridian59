@@ -65,6 +65,9 @@ INT_PTR CALLBACK SendOfferDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPA
       ShowWindow(hwndReceive, SW_HIDE);
       EnableWindow(GetDlgItem(hDlg, IDOK), FALSE);
 
+      TooltipAddWindow(GetDlgItem(hDlg, IDOK), hInst, IDS_TOOLTIP_OFFER_ACCEPT);
+      TooltipAddWindow(GetDlgItem(hDlg, IDCANCEL), hInst, IDS_TOOLTIP_OFFER_CANCEL);
+
       return TRUE;
 
    case WM_ACTIVATE:
@@ -194,6 +197,11 @@ INT_PTR CALLBACK RcvOfferDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
       ShowWindow(hDlg, SW_HIDE);
 
       hRcvOfferDlg = hDlg;
+
+      TooltipAddWindow(GetDlgItem(hDlg, IDOK), hInst, IDS_TOOLTIP_OFFER_ACCEPT);
+      TooltipAddWindow(GetDlgItem(hDlg, IDCANCEL), hInst, IDS_TOOLTIP_OFFER_CANCEL);
+      TooltipAddWindow(GetDlgItem(hDlg, IDC_SETITEMS), hInst, IDS_TOOLTIP_OFFER_ADD);
+
       return TRUE;
 
    case WM_ACTIVATE:
