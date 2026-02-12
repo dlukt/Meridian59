@@ -67,7 +67,8 @@ void TermConvertBuffer(char *s,int len_s)
 
 const char * GetTagName(val_type val)
 {
-   static char s[10];
+   /* Use thread_local to avoid race conditions when multiple threads call this function */
+   static thread_local char s[10];
 
    switch (val.v.tag)
    {
@@ -96,7 +97,8 @@ const char * GetDataName(val_type val)
 {
    resource_node *r;
    class_node *c;
-   static char s[30];
+   /* Use thread_local to avoid race conditions when multiple threads call this function */
+   static thread_local char s[30];
    val_type int_val;
 
    switch (val.v.tag)
