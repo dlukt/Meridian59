@@ -1124,17 +1124,41 @@ static INT_PTR CALLBACK CommonPreferencesDlgProc(HWND hDlg, UINT message, WPARAM
         CheckDlgButton(hDlg, IDC_PROFANE, config.antiprofane);
         CheckDlgButton(hDlg, IDC_DRAWMAP, config.drawmap);
 
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_SCROLLLOCK), hInst, IDS_TOOLTIP_SCROLLLOCK);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_DRAWNAMES), hInst, IDS_TOOLTIP_DRAWNAMES);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_INV_RARITY), hInst, IDS_TOOLTIP_INV_RARITY);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_TOOLTIPS), hInst, IDS_TOOLTIP_TOOLTIPS);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_PAIN), hInst, IDS_TOOLTIP_PAIN);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_INVNUM), hInst, IDS_TOOLTIP_INVNUM);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_SAFETY), hInst, IDS_TOOLTIP_SAFETY);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_BOUNCE), hInst, IDS_TOOLTIP_BOUNCE);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_TOOLBAR), hInst, IDS_TOOLTIP_TOOLBAR);
+        TooltipAddWindow(GetDlgItem(hDlg, IDS_LATENCY0), hInst, IDS_TOOLTIP_LAGBOX);
+        TooltipAddWindow(GetDlgItem(hDlg, ID_SPINNING_CUBE), hInst, IDS_TOOLTIP_SPINNING_CUBE);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_PROFANE), hInst, IDS_TOOLTIP_PROFANE);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_DRAWMAP), hInst, IDS_TOOLTIP_DRAWMAP);
+
         CheckDlgButton(hDlg, IDC_MUSIC, config.play_music);
         CheckDlgButton(hDlg, IDC_SOUNDFX, config.play_sound);
         CheckDlgButton(hDlg, IDC_LOOPSOUNDS, config.play_loop_sounds);
         CheckDlgButton(hDlg, IDC_RANDSOUNDS, config.play_random_sounds);
+
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_MUSIC), hInst, IDS_TOOLTIP_MUSIC);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_SOUNDFX), hInst, IDS_TOOLTIP_SOUNDFX);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_LOOPSOUNDS), hInst, IDS_TOOLTIP_LOOPSOUNDS);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_RANDSOUNDS), hInst, IDS_TOOLTIP_RANDSOUNDS);
 
         EnableWindow(GetDlgItem(hDlg, IDC_LOOPSOUNDS), IsDlgButtonChecked(hDlg, IDC_SOUNDFX));
         EnableWindow(GetDlgItem(hDlg, IDC_RANDSOUNDS), IsDlgButtonChecked(hDlg, IDC_SOUNDFX));
 
         CheckRadioButton(hDlg, IDC_TARGETHALO1, IDC_TARGETHALO3, config.halocolor + IDC_TARGETHALO1);
 
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_TARGETHALO1), hInst, IDS_TOOLTIP_TARGETHALO);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_TARGETHALO2), hInst, IDS_TOOLTIP_TARGETHALO);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_TARGETHALO3), hInst, IDS_TOOLTIP_TARGETHALO);
+
         CheckDlgButton(hDlg, IDC_COLORCODES, config.colorcodes);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_COLORCODES), hInst, IDS_TOOLTIP_COLORCODES);
 
         Trackbar_SetRange(GetDlgItem(hDlg, IDC_SOUND_VOLUME), 0, CONFIG_MAX_VOLUME, FALSE);
         Trackbar_SetRange(GetDlgItem(hDlg, IDC_MUSIC_VOLUME), 0, CONFIG_MAX_VOLUME, FALSE);
