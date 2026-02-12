@@ -3147,6 +3147,9 @@ BEGIN
     IDS_CRCERROR            "CRC error in server message."
     IDS_GOTOFFER            "You may now accept or cancel the offer."
     IDS_WAITRESPONSE        "Waiting for response..."
+    IDS_TOOLTIP_OFFER_ACCEPT "Accept the offer"
+    IDS_TOOLTIP_OFFER_CANCEL "Cancel the trade"
+    IDS_TOOLTIP_OFFER_ADD   "Add items to offer"
 END
 
 STRINGTABLE

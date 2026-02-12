@@ -660,6 +660,9 @@
 #define IDS_TOOLTIP_RANDSOUNDS          4016
 #define IDS_TOOLTIP_COLORCODES          4017
 #define IDS_TOOLTIP_TARGETHALO          4018
+#define IDS_TOOLTIP_OFFER_ACCEPT        4019
+#define IDS_TOOLTIP_OFFER_CANCEL        4020
+#define IDS_TOOLTIP_OFFER_ADD           4021
 
 // Next default values for new objects
 //
