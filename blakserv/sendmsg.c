@@ -63,7 +63,7 @@ static __inline void InterpretUnaryAssign(object_node *o,local_var_type *local_v
 static __inline void InterpretBinaryAssign(object_node *o,local_var_type *local_vars,opcode_type opcode);
 static __inline void InterpretGoto(object_node *o,local_var_type *local_vars,
 				   opcode_type opcode,char *inst_start);
-static __inline void InterpretCall(int object_id,local_var_type *local_vars,opcode_type opcode);
+static __inline void InterpretCall(object_node *o,int object_id,local_var_type *local_vars,opcode_type opcode);
 
 void InitProfiling(void)
 {
@@ -665,7 +665,7 @@ int InterpretAtMessage(int object_id,class_node* c,message_node* m,
 				InterpretGoto(o,&local_vars,opcode,inst_start);
 				continue;
 			case CALL :
-				InterpretCall(object_id,&local_vars,opcode);
+				InterpretCall(o,object_id,&local_vars,opcode);
 				o = GetObjectByID(object_id); // Refresh object pointer
 				if (o == NULL)
 				{
@@ -1092,7 +1092,7 @@ static __inline void InterpretGoto(object_node *o,local_var_type *local_vars,
 		bkod = inst_start + dest_addr;
 }
 
-static __inline void InterpretCall(int object_id,local_var_type *local_vars,opcode_type opcode)
+static __inline void InterpretCall(object_node *o,int object_id,local_var_type *local_vars,opcode_type opcode)
 {
 	parm_node normal_parm_array[MAX_C_PARMS],name_parm_array[MAX_NAME_PARMS];
 	unsigned char info,num_normal_parms,num_name_parms,initial_type;
@@ -1153,7 +1153,7 @@ static __inline void InterpretCall(int object_id,local_var_type *local_vars,opco
 
 		/* maybe only need to do this in call to sendmessage and postmessage? */
 
-		name_val = RetrieveValue(object_id,local_vars,initial_type,initial_value);
+		name_val = RetrieveValue(o,local_vars,initial_type,initial_value);
 
 		name_parm_array[i].value = name_val.int_val;
 	}
