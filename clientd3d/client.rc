@@ -3150,6 +3150,12 @@ BEGIN
     IDS_TOOLTIP_OFFER_ACCEPT "Accept the offer"
     IDS_TOOLTIP_OFFER_CANCEL "Cancel the trade"
     IDS_TOOLTIP_OFFER_ADD   "Add items to offer"
+    IDS_TOOLTIP_USERNAME    "Enter your Meridian 59 account username."
+    IDS_TOOLTIP_PASSWORD    "Enter your account password."
+    IDS_TOOLTIP_SERVER_101  "Connect to Server 101 (Standard)."
+    IDS_TOOLTIP_SERVER_102  "Connect to Server 102 (Hardcore)."
+    IDS_TOOLTIP_SERVER_CUSTOM "Enter a custom server number."
+    IDS_TOOLTIP_SIGNUP      "Create a new Meridian 59 account."
 END
 
 STRINGTABLE
