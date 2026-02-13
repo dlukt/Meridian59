@@ -663,6 +663,12 @@
 #define IDS_TOOLTIP_OFFER_ACCEPT        4019
 #define IDS_TOOLTIP_OFFER_CANCEL        4020
 #define IDS_TOOLTIP_OFFER_ADD           4021
+#define IDS_TOOLTIP_USERNAME            4022
+#define IDS_TOOLTIP_PASSWORD            4023
+#define IDS_TOOLTIP_SERVER_101          4024
+#define IDS_TOOLTIP_SERVER_102          4025
+#define IDS_TOOLTIP_SERVER_CUSTOM       4026
+#define IDS_TOOLTIP_SIGNUP              4027
 
 // Next default values for new objects
 //

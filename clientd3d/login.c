@@ -273,6 +273,13 @@ INT_PTR CALLBACK LoginDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
       SetWindowFont(hUser, GetFont(FONT_INPUT), FALSE);
       SetWindowFont(hPasswd, GetFont(FONT_INPUT), FALSE);
 
+      TooltipAddWindow(hUser, hInst, IDS_TOOLTIP_USERNAME);
+      TooltipAddWindow(hPasswd, hInst, IDS_TOOLTIP_PASSWORD);
+      TooltipAddWindow(GetDlgItem(hDlg, IDC_SERVER_101), hInst, IDS_TOOLTIP_SERVER_101);
+      TooltipAddWindow(GetDlgItem(hDlg, IDC_SERVER_102), hInst, IDS_TOOLTIP_SERVER_102);
+      TooltipAddWindow(GetDlgItem(hDlg, IDC_SERVERNUM), hInst, IDS_TOOLTIP_SERVER_CUSTOM);
+      TooltipAddWindow(GetDlgItem(hDlg, IDC_SIGNUP), hInst, IDS_TOOLTIP_SIGNUP);
+
       // Set server number, if it's valid
       if (config.comm.server_num == 101) {
         CheckDlgButton(hDlg, IDC_SERVER_101, TRUE);
