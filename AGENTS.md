@@ -32,6 +32,7 @@ Meridian 59 is a multi-module C/C++ codebase with platform-specific build paths.
 
 ## Testing Guidelines
 - Test framework lives in `tests/test_framework.h` (assert macros + runner).
+- Always add tests for any changes in a PR.
 - Add new tests in `tests/test_*.cpp` and register them in `tests/test_main.cpp`.
 - Keep tests deterministic and self-contained (use temp files and cleanup patterns already present).
 - Run `make -C tests test` before opening a PR.

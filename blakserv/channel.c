@@ -37,6 +37,20 @@ channel_node channel[NUM_CHANNELS];
 void WriteStrChannel(int channel_id,char *s);
 FILE *CreateFileChannel(int channel_id);
 
+static void AppendNewlineSafe(char *s, size_t max_len)
+{
+    size_t len = strlen(s);
+    if (len > 0 && s[len-1] != '\n')
+    {
+        if (len + 2 >= max_len)
+        {
+            // Truncate if necessary to fit \r\n and \0
+            s[max_len-3] = '\0';
+        }
+        strcat(s, "\r\n");
+    }
+}
+
 std::string obj_to_string(int tag, INT64 data)
 {
   return std::to_string(tag) + "," + std::to_string(data);
@@ -97,8 +111,7 @@ void dprintf(const char *fmt,...)
    va_end(marker);
 
    TermConvertBuffer(s,sizeof(s)); /* makes \n's into CR/LF pairs */
-   if (s[strlen(s)-1] != '\n')
-      strcat(s,"\r\n");
+   AppendNewlineSafe(s, sizeof(s));
 
    WriteStrChannel(CHANNEL_D,s);
 }
@@ -131,8 +144,7 @@ void bprintf(const char *fmt,...)
    va_end(marker);
 
    TermConvertBuffer(s,sizeof(s)); /* makes \n's into CR/LF pairs */
-   if (s[strlen(s)-1] != '\n')
-      strcat(s,"\r\n");
+   AppendNewlineSafe(s, sizeof(s));
 
    WriteStrChannel(CHANNEL_E,s);
 }
@@ -149,8 +161,7 @@ void lprintf(const char *fmt,...)
    va_end(marker);
 
    TermConvertBuffer(s,sizeof(s)); /* makes \n's into CR/LF pairs */
-   if (s[strlen(s)-1] != '\n')
-      strcat(s,"\r\n");
+   AppendNewlineSafe(s, sizeof(s));
 
    WriteStrChannel(CHANNEL_L,s);
 }

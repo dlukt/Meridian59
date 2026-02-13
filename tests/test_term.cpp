@@ -41,14 +41,6 @@ class_node * GetClassByName(const char *name) {
     return NULL;
 }
 
-void eprintf(const char *fmt, ...) {
-    (void)fmt;
-}
-
-void lprintf(const char *fmt, ...) {
-    (void)fmt;
-}
-
 // Define any missing global variables
 DWORD main_thread_id = 0;
 
