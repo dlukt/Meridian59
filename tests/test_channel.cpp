@@ -35,11 +35,45 @@ void StartupPrintf(const char *fmt, ...) {
     (void)fmt;
 }
 
+static std::string g_debug_info = "DebugInfo";
+
 std::string BlakodDebugInfo(void) {
-    return "DebugInfo";
+    return g_debug_info;
 }
 
 // Tests
+
+static int test_bprintf_long_debug_info(void) {
+    // bprintf uses a 1000 char buffer.
+    // The previous implementation assumed prefix (time + debug info) <= MAX_TIME_SIZE (100).
+    // If debug info > 100, vsnprintf was given a size > available space.
+    // This test sets debug info > 100 chars and checks for crash/overflow.
+
+    std::string original_debug_info = g_debug_info;
+    g_debug_info = std::string(150, 'X'); // 150 chars, clearly > 100.
+
+    bprintf("Message");
+
+    // If we survive, check basic properties.
+    ASSERT_TRUE(last_channel_id == CHANNEL_E);
+    size_t len = last_channel_msg.length();
+
+    // Buffer size 1000.
+    ASSERT_TRUE(len < 1000);
+
+    // Should contain our debug info (or be truncated gracefully).
+    // Since snprintf for prefix might truncate if it hits 1000,
+    // but here 150 + time (~20) < 1000.
+    // So we expect full debug info.
+    ASSERT_TRUE(last_channel_msg.find(g_debug_info) != std::string::npos);
+
+    // Should contain message.
+    ASSERT_TRUE(last_channel_msg.find("Message") != std::string::npos);
+
+    // Restore
+    g_debug_info = original_debug_info;
+    return 0;
+}
 
 static int test_dprintf_overflow_with_newlines(void) {
     // dprintf buffer is 2000.
@@ -89,6 +123,7 @@ int run_channel_tests(int *tests_run, int *failures) {
     int local_failures = 0;
     local_failures += run_test("test_dprintf_overflow_with_newlines", test_dprintf_overflow_with_newlines, tests_run);
     local_failures += run_test("test_lprintf_basic", test_lprintf_basic, tests_run);
+    local_failures += run_test("test_bprintf_long_debug_info", test_bprintf_long_debug_info, tests_run);
     *failures += local_failures;
     return local_failures;
 }
