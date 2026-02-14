@@ -103,12 +103,19 @@ void dprintf(const char *fmt,...)
 {
    char s[2000];
    va_list marker;
+   size_t current_len;
+   size_t remaining;
 
    snprintf(s, sizeof(s), "%s|",TimeStr(GetTime()).c_str());
+   current_len = strlen(s);
+   remaining = sizeof(s) - current_len;
 
-   va_start(marker,fmt);
-   vsnprintf(s+strlen(s), sizeof(s) - MAX_TIME_SIZE, fmt,marker);
-   va_end(marker);
+   if (remaining > 0)
+   {
+      va_start(marker,fmt);
+      vsnprintf(s+current_len, remaining, fmt,marker);
+      va_end(marker);
+   }
 
    TermConvertBuffer(s,sizeof(s)); /* makes \n's into CR/LF pairs */
    AppendNewlineSafe(s, sizeof(s));
@@ -120,12 +127,19 @@ void eprintf(const char *fmt,...)
 {
    char s[2000];
    va_list marker;
+   size_t current_len;
+   size_t remaining;
 
    snprintf(s, sizeof(s), "%s | ",TimeStr(GetTime()).c_str());
+   current_len = strlen(s);
+   remaining = sizeof(s) - current_len;
 
-   va_start(marker,fmt);
-   vsnprintf(s+strlen(s), sizeof(s) - MAX_TIME_SIZE, fmt,marker);
-   va_end(marker);
+   if (remaining > 0)
+   {
+      va_start(marker,fmt);
+      vsnprintf(s+current_len, remaining, fmt,marker);
+      va_end(marker);
+   }
 
    TermConvertBuffer(s,sizeof(s)); /* makes \n's into CR/LF pairs */
 
@@ -136,12 +150,19 @@ void bprintf(const char *fmt,...)
 {
    char s[1000];
    va_list marker;
+   size_t current_len;
+   size_t remaining;
 
    snprintf(s, sizeof(s), "%s | [%s] ",TimeStr(GetTime()).c_str(),BlakodDebugInfo().c_str());
+   current_len = strlen(s);
+   remaining = sizeof(s) - current_len;
 
-   va_start(marker,fmt);
-   vsnprintf(s+strlen(s), sizeof(s) - MAX_TIME_SIZE, fmt,marker);
-   va_end(marker);
+   if (remaining > 0)
+   {
+      va_start(marker,fmt);
+      vsnprintf(s+current_len, remaining, fmt,marker);
+      va_end(marker);
+   }
 
    TermConvertBuffer(s,sizeof(s)); /* makes \n's into CR/LF pairs */
    AppendNewlineSafe(s, sizeof(s));
@@ -153,12 +174,19 @@ void lprintf(const char *fmt,...)
 {
    char s[1000];
    va_list marker;
+   size_t current_len;
+   size_t remaining;
 
    snprintf(s, sizeof(s), "%s | ",TimeStr(GetTime()).c_str());
+   current_len = strlen(s);
+   remaining = sizeof(s) - current_len;
 
-   va_start(marker,fmt);
-   vsnprintf(s+strlen(s), sizeof(s) - MAX_TIME_SIZE, fmt,marker);
-   va_end(marker);
+   if (remaining > 0)
+   {
+      va_start(marker,fmt);
+      vsnprintf(s+current_len, remaining, fmt,marker);
+      va_end(marker);
+   }
 
    TermConvertBuffer(s,sizeof(s)); /* makes \n's into CR/LF pairs */
    AppendNewlineSafe(s, sizeof(s));
