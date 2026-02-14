@@ -3156,6 +3156,13 @@ BEGIN
     IDS_TOOLTIP_SERVER_102  "Connect to Server 102 (Hardcore)."
     IDS_TOOLTIP_SERVER_CUSTOM "Enter a custom server number."
     IDS_TOOLTIP_SIGNUP      "Create a new Meridian 59 account."
+    IDS_TOOLTIP_ALWAYSRUN   "Toggle whether your character always runs by default."
+    IDS_TOOLTIP_CLASSIC     "Use the original 1996 keyboard controls."
+    IDS_TOOLTIP_DYNAMIC     "Enable dynamic lighting effects (requires restart)."
+    IDS_TOOLTIP_QUICKCHAT   "Pressing Enter opens chat, WASD moves."
+    IDS_TOOLTIP_SOFTWARE    "Use software rendering instead of hardware acceleration."
+    IDS_TOOLTIP_ATTACKONTARGET "Automatically attack when targeting an enemy."
+    IDS_TOOLTIP_GPU_EFFICIENCY "Reduce GPU usage when the window is inactive."
 END
 
 STRINGTABLE
