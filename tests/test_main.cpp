@@ -15,6 +15,7 @@
 #include "test_parse_logic.h"
 #include "test_term.h"
 #include "test_channel.h"
+#include "test_retrieve_value.h"
 
 static std::string TrimTrailingSpaces(std::string value)
 {
@@ -334,6 +335,9 @@ int main(void)
 
     // Run term.c tests
     run_term_tests(&tests_run, &failures);
+
+    // Run RetrieveValue tests
+    run_retrieve_value_tests(&tests_run, &failures);
 
     if (failures != 0)
     {
