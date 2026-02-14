@@ -1,120 +1,47 @@
 #include "test_framework.h"
-#include <string>
+#include "test_retrieve_value.h"
+
 #include <vector>
-#include <cinttypes>
-#include <cstring>
-#include <iostream>
+#include <string>
 
-// Mocking dependencies for sendmsg.h
+// Mock dependencies by renaming them via preprocessor before inclusion
+#define GetObjectByID mock_GetObjectByID
+#define eprintf mock_eprintf
+#define bprintf mock_bprintf
+#define BlakodDebugInfo mock_BlakodDebugInfo
+#define GetKodStats mock_GetKodStats
 
-#define _BLAKSERV_H // Prevent including the real blakserv.h
+// Include real server headers to get types and inline functions
+#include "../blakserv/blakserv.h"
 
-// Minimal definitions from blakserv.h
-typedef int64_t INT64;
-typedef uint64_t UINT64;
-typedef INT64 blak_int;
+// Undefine macros to allow implementing the mocks without confusion if needed,
+// though we usually implement the mocked name directly.
 
-#define MAX_LOCALS 50
-#define MAX_NAME_PARMS 45
-#define MAX_C_PARMS 40
-#define MAX_C_FUNCTION 256
-#define MAX_POST_QUEUE 4000
-#define MAX_DEPTH 2000
+// Mock Implementations
 
-#define NIL 0
-#define INVALID_ID -1
-#define INVALID_CLASS -1
-#define TAG_INVALID -1
+static object_node *g_mock_object = nullptr;
 
-enum {
-   TAG_INT = 1,
-   TAG_STRING = 2,
-   TAG_OBJECT = 3,
-   TAG_CLASS = 4,
-   TAG_OVERRIDE = 14, // Made up for test if not standard
-   TAG_NIL = 0 // Assuming NIL tag is 0
-};
-
-enum {
-   LOCAL_VAR = 1,
-   PROPERTY = 2,
-   CONSTANT = 3,
-   CLASS_VAR = 4
-};
-
-typedef struct
-{
-   INT64 data:60;
-   UINT64 tag:4;
-} server_constant_type;
-
-typedef union
-{
-   blak_int int_val;
-   server_constant_type v;
-} val_type;
-
-typedef struct
-{
-   blak_int value;
-   int name_id;
-   char type;
-} parm_node;
-
-struct class_node;
-
-typedef struct
-{
-   int id;
-   val_type val;
-} prop_type;
-
-typedef struct
-{
-   int object_id;
-   int class_id;
-   class_node *class_ptr;
-   bool deleted;
-   int garbage_ref;
-   int num_props;
-   prop_type *p;
-} object_node;
-
-typedef struct
-{
-    val_type val;
-} class_var;
-
-struct class_node
-{
-    int class_id;
-    const char *class_name;
-    const char *fname;
-    int num_vars;
-    class_var *vars;
-    int num_properties;
-    // ... minimal for test
-};
-
-
-// Mock global functions
-int eprintf(const char *format, ...) { return 0; }
-int bprintf(const char *format, ...) { return 0; }
-std::string BlakodDebugInfo() { return "DebugInfo"; }
-
-// Mock GetObjectByID
-object_node *g_mock_object = nullptr;
-object_node * GetObjectByID(int object_id) {
+object_node * mock_GetObjectByID(int object_id) {
     if (g_mock_object && g_mock_object->object_id == object_id) return g_mock_object;
     return nullptr;
 }
 
-// Now include the header under test
-#include "../blakserv/sendmsg.h"
+void mock_eprintf(const char *format, ...) {
+    (void)format;
+}
 
-// Mock GetKodStats (implemented after include so struct is defined)
-kod_statistics g_kod_stats;
-kod_statistics * GetKodStats(void) { return &g_kod_stats; }
+void mock_bprintf(const char *format, ...) {
+    (void)format;
+}
+
+std::string mock_BlakodDebugInfo(void) {
+    return "DebugInfo";
+}
+
+static kod_statistics g_kod_stats;
+kod_statistics * mock_GetKodStats(void) {
+    return &g_kod_stats;
+}
 
 // Test Functions
 
@@ -140,22 +67,31 @@ static int test_retrieve_local_var(void)
 
 static int test_retrieve_property_via_id(void)
 {
+    // Setup mock object
     object_node obj;
+    // We need to allocate properties
     prop_type props[1];
-    class_node cls;
+
+    // Setup mock class?
+    // class_node is complicated to mock fully because of dependencies,
+    // but RetrieveValue only accesses o->p[data] for PROPERTY.
+    // It does check GetKodStats()->debugging.
+
+    // Initialize stats
+    g_kod_stats.debugging = 0;
 
     obj.object_id = 100;
-    obj.class_id = 10;
-    obj.class_ptr = &cls;
-    obj.num_props = 1;
+    // obj.class_id doesn't matter for PROPERTY retrieval in optimized path?
+    // In RetrieveValue(int object_id...), it does:
+    // o = GetObjectByID(object_id);
+    // return *(val_type *)&o->p[data].val.int_val;
+
+    // It does NOT check class_ptr for PROPERTY type.
+
     obj.p = props;
-
     props[0].id = 0;
-    props[0].val.v.tag = TAG_STRING;
+    props[0].val.v.tag = TAG_STRING; // 2
     props[0].val.v.data = 12345;
-
-    cls.class_id = 10;
-    cls.num_properties = 1;
 
     g_mock_object = &obj;
 
@@ -172,22 +108,16 @@ static int test_retrieve_property_via_pointer(void)
 {
     object_node obj;
     prop_type props[1];
-    class_node cls;
+
+    g_kod_stats.debugging = 0;
 
     obj.object_id = 200;
-    obj.class_id = 20;
-    obj.class_ptr = &cls;
-    obj.num_props = 1;
     obj.p = props;
-
     props[0].id = 0;
-    props[0].val.v.tag = TAG_OBJECT;
+    props[0].val.v.tag = TAG_OBJECT; // 3
     props[0].val.v.data = 999;
 
-    cls.class_id = 20;
-    cls.num_properties = 1;
-
-    // Even if global lookup fails (g_mock_object is null/different), pointer access should work
+    // Even if global lookup fails (g_mock_object is null), pointer access should work
     g_mock_object = nullptr;
 
     local_var_type locals;
@@ -204,17 +134,19 @@ static int test_retrieve_class_var_via_pointer(void)
 {
     object_node obj;
     class_node cls;
-    class_var vars[1];
+    var_default_type vars[1];
+
+    g_kod_stats.debugging = 0;
 
     obj.object_id = 300;
     obj.class_id = 30;
     obj.class_ptr = &cls;
 
-    vars[0].val.v.tag = TAG_INT;
+    vars[0].val.v.tag = TAG_INT; // 1
     vars[0].val.v.data = 777;
 
     cls.class_id = 30;
-    cls.class_name = "TestClass";
+    cls.class_name = (char*)"TestClass";
     cls.num_vars = 1;
     cls.vars = vars;
 
@@ -229,22 +161,13 @@ static int test_retrieve_class_var_via_pointer(void)
     return 0;
 }
 
-int main()
+int run_retrieve_value_tests(int *tests_run, int *failures)
 {
-    int tests_run = 0;
-    int failures = 0;
-
-    failures += run_test("test_retrieve_local_var", test_retrieve_local_var, &tests_run);
-    failures += run_test("test_retrieve_property_via_id", test_retrieve_property_via_id, &tests_run);
-    failures += run_test("test_retrieve_property_via_pointer", test_retrieve_property_via_pointer, &tests_run);
-    failures += run_test("test_retrieve_class_var_via_pointer", test_retrieve_class_var_via_pointer, &tests_run);
-
-    if (failures != 0)
-    {
-        fprintf(stderr, "%d test(s) failed.\n", failures);
-        return 1;
-    }
-
-    printf("All %d tests passed.\n", tests_run);
-    return 0;
+    int local_failures = 0;
+    local_failures += run_test("test_retrieve_local_var", test_retrieve_local_var, tests_run);
+    local_failures += run_test("test_retrieve_property_via_id", test_retrieve_property_via_id, tests_run);
+    local_failures += run_test("test_retrieve_property_via_pointer", test_retrieve_property_via_pointer, tests_run);
+    local_failures += run_test("test_retrieve_class_var_via_pointer", test_retrieve_class_var_via_pointer, tests_run);
+    *failures += local_failures;
+    return local_failures;
 }
