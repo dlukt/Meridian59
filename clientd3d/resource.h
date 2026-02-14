@@ -669,6 +669,13 @@
 #define IDS_TOOLTIP_SERVER_102          4025
 #define IDS_TOOLTIP_SERVER_CUSTOM       4026
 #define IDS_TOOLTIP_SIGNUP              4027
+#define IDS_TOOLTIP_ALWAYSRUN           4028
+#define IDS_TOOLTIP_CLASSIC             4029
+#define IDS_TOOLTIP_DYNAMIC             4030
+#define IDS_TOOLTIP_QUICKCHAT           4031
+#define IDS_TOOLTIP_SOFTWARE            4032
+#define IDS_TOOLTIP_ATTACKONTARGET      4033
+#define IDS_TOOLTIP_GPU_EFFICIENCY      4034
 
 // Next default values for new objects
 //

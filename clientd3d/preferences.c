@@ -973,6 +973,15 @@ static INT_PTR CALLBACK OptionsPreferencesDlgProc(HWND hDlg, UINT message, WPARA
         CheckDlgButton(hDlg, IDC_SOFTWARE, m_software);
         CheckDlgButton(hDlg, IDC_ATTACKONTARGET, m_attackontarget);
         CheckDlgButton(hDlg, IDC_GPU_EFFICIENCY, m_gpuefficiency);
+
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_ALWAYSRUN), hInst, IDS_TOOLTIP_ALWAYSRUN);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_CLASSIC), hInst, IDS_TOOLTIP_CLASSIC);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_DYNAMIC), hInst, IDS_TOOLTIP_DYNAMIC);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_QUICKCHAT), hInst, IDS_TOOLTIP_QUICKCHAT);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_SOFTWARE), hInst, IDS_TOOLTIP_SOFTWARE);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_ATTACKONTARGET), hInst, IDS_TOOLTIP_ATTACKONTARGET);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_GPU_EFFICIENCY), hInst, IDS_TOOLTIP_GPU_EFFICIENCY);
+
         return (INT_PTR)TRUE;
     case WM_COMMAND:
         switch (LOWORD(wParam))
