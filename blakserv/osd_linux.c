@@ -71,6 +71,7 @@ int GetUsedSessions(void)
 	return sessions_logged_on;
 }
 
+#ifndef UNIT_TEST
 void StartupPrintf(const char *fmt,...)
 {
 	char s[200];
@@ -89,6 +90,7 @@ void StartupPrintf(const char *fmt,...)
 
 	printf("Startup: %s\n", s);
 }
+#endif
 
 
 void InterfaceUpdate(void)
@@ -139,9 +141,16 @@ HANDLE StartAsyncNameLookup(char *peer_addr,char *buf)
 }
 
 
+void FormatFatalError(char* buf, size_t size, const char* filename, int line, const char* str)
+{
+	snprintf(buf, size, "Fatal Error File %s line %i\r\n\r\n%s\n", filename, line, str);
+}
+
 void FatalErrorShow(const char *filename,int line,const char *str)
 {
-	fprintf(stderr, "Fatal Error File %s line %i\r\n\r\n%s\n", filename, line, str);
+	char buf[2048];
+	FormatFatalError(buf, sizeof(buf), filename, line, str);
+	fprintf(stderr, "%s", buf);
 
 	exit(1);
 }
