@@ -83,7 +83,10 @@ typedef struct
 
 void InitProfiling(void);
 void InitBkodInterpret(void);
-kod_statistics * GetKodStats(void);
+
+extern kod_statistics kod_stat;
+__inline kod_statistics * GetKodStats(void) { return &kod_stat; }
+
 char * GetBkodPtr(void);
 bool IsInterpreting(void);
 
