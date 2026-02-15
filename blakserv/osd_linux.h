@@ -91,6 +91,7 @@ void StartAsyncSocketAccept(SOCKET sock,int connection_type);
 HANDLE StartAsyncNameLookup(char *peer_addr,char *buf);
 void StartAsyncSession(void *s);
 
+void FormatFatalError(char* buf, size_t size, const char* filename, int line, const char* str);
 void FatalErrorShow(const char *filename,int line,const char *str);
 
 bool IsAcceptingSocket(int sock);

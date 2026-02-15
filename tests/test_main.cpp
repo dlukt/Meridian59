@@ -339,6 +339,12 @@ int main(void)
     // Run RetrieveValue tests
     run_retrieve_value_tests(&tests_run, &failures);
 
+    // Run osd_linux.c tests
+    extern int test_format_fatal_error();
+    extern int test_format_fatal_error_buffer_limit();
+    failures += run_test("test_format_fatal_error", test_format_fatal_error, &tests_run);
+    failures += run_test("test_format_fatal_error_buffer_limit", test_format_fatal_error_buffer_limit, &tests_run);
+
     if (failures != 0)
     {
         fprintf(stderr, "%d test(s) failed.\n", failures);
