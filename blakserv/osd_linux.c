@@ -141,9 +141,7 @@ HANDLE StartAsyncNameLookup(char *peer_addr,char *buf)
 
 void FatalErrorShow(const char *filename,int line,const char *str)
 {
-	char s[5000];
-
-	printf(s,"Fatal Error File %s line %i\r\n\r\n%s",filename,line,str);
+	fprintf(stderr, "Fatal Error File %s line %i\r\n\r\n%s\n", filename, line, str);
 
 	exit(1);
 }
