@@ -3363,6 +3363,12 @@ BEGIN
 	IDS_TOOLTIP_RANDSOUNDS          "Enables random ambient sounds."
 	IDS_TOOLTIP_COLORCODES          "Displays color codes in text."
 	IDS_TOOLTIP_TARGETHALO          "Selects the color style for the target indicator halo."
+	IDS_TOOLTIP_PROFANE_IGNORE      "Completely hide messages containing profanity."
+	IDS_TOOLTIP_PROFANE_OBSCURE     "Replace profane words with symbols."
+	IDS_TOOLTIP_PROFANE_EXTRA       "Enable stricter filtering for embedded profanity."
+	IDS_TOOLTIP_PROFANE_EDIT        "Enter a word to add or remove from the filter list."
+	IDS_TOOLTIP_PROFANE_ADD         "Add the entered word to your custom profanity list."
+	IDS_TOOLTIP_PROFANE_REMOVE      "Remove the entered word from your custom profanity list."
 END
 
 

@@ -1072,6 +1072,14 @@ static INT_PTR CALLBACK ProfanitySettingsDlgProc(HWND hDlg, UINT message, WPARAM
         SetDlgItemText(hDlg, IDC_EDIT1, "");
         CheckRadioButton(hDlg, IDC_RADIO1, IDC_RADIO2, IDC_RADIO1 + !config.ignoreprofane);
         CheckDlgButton(hDlg, IDC_CHECK1, config.extraprofane);
+
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_RADIO1), hInst, IDS_TOOLTIP_PROFANE_IGNORE);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_RADIO2), hInst, IDS_TOOLTIP_PROFANE_OBSCURE);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_CHECK1), hInst, IDS_TOOLTIP_PROFANE_EXTRA);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_EDIT1), hInst, IDS_TOOLTIP_PROFANE_EDIT);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_BUTTON1), hInst, IDS_TOOLTIP_PROFANE_ADD);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_BUTTON2), hInst, IDS_TOOLTIP_PROFANE_REMOVE);
+
         return (INT_PTR)TRUE;
     }
     case WM_COMMAND:
