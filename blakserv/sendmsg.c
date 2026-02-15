@@ -184,11 +184,6 @@ void InitBkodInterpret(void)
 	ccall_table[SENDWEBHOOK] = C_SendWebhook;
 }
 
-kod_statistics * GetKodStats()
-{
-	return &kod_stat;
-}
-
 /* this pointer only makes sense when interpreting (used by bprintf only) */
 
 char * GetBkodPtr(void)

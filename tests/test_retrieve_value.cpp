@@ -9,7 +9,6 @@
 #define eprintf mock_eprintf
 #define bprintf mock_bprintf
 #define BlakodDebugInfo mock_BlakodDebugInfo
-#define GetKodStats mock_GetKodStats
 
 // Include real server headers to get types and inline functions
 #include "../blakserv/blakserv.h"
@@ -38,10 +37,8 @@ std::string mock_BlakodDebugInfo(void) {
     return "DebugInfo";
 }
 
-static kod_statistics g_kod_stats;
-kod_statistics * mock_GetKodStats(void) {
-    return &g_kod_stats;
-}
+// Global variable required by inline GetKodStats in sendmsg.h
+kod_statistics kod_stat;
 
 // Test Functions
 
@@ -78,7 +75,7 @@ static int test_retrieve_property_via_id(void)
     // It does check GetKodStats()->debugging.
 
     // Initialize stats
-    g_kod_stats.debugging = 0;
+    kod_stat.debugging = 0;
 
     obj.object_id = 100;
     // obj.class_id doesn't matter for PROPERTY retrieval in optimized path?
@@ -109,7 +106,7 @@ static int test_retrieve_property_via_pointer(void)
     object_node obj;
     prop_type props[1];
 
-    g_kod_stats.debugging = 0;
+    kod_stat.debugging = 0;
 
     obj.object_id = 200;
     obj.p = props;
@@ -136,7 +133,7 @@ static int test_retrieve_class_var_via_pointer(void)
     class_node cls;
     var_default_type vars[1];
 
-    g_kod_stats.debugging = 0;
+    kod_stat.debugging = 0;
 
     obj.object_id = 300;
     obj.class_id = 30;
