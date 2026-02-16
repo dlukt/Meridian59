@@ -16,6 +16,7 @@
 
 #include "blakserv.h"
 #include "json_utils.h"
+#include "webhook_message.h"
 
 // Configuration constants
 static const int MAX_WEBHOOK_PIPES = 10;
@@ -91,18 +92,8 @@ bool SendWebhookMessage(const char* message, int len)
         return false;
     }
 
-    std::string message_to_send;
-    
-    // If message already starts with '{', assume it's already JSON and skip wrapping
-    if (message[0] == '{') {
-        message_to_send = std::string(message, len);
-    } else {
-        // Legacy format: wrap plain text in JSON with timestamp
-        time_t now = time(NULL);
-        // Use JsonEscape to prevent JSON injection and handle special characters
-        std::string escaped_message = JsonEscape(std::string(message, len));
-        message_to_send = "{\"timestamp\":" + std::to_string((long)now) + ",\"message\":\"" + escaped_message + "\"}";
-    }
+    // Construct the payload using helper function
+    std::string message_to_send = ConstructWebhookPayload(std::string(message, len), time(NULL));
 
     // Try to send using round-robin across all pipes
     for (int i = 0; i < MAX_WEBHOOK_PIPES; i++) {
