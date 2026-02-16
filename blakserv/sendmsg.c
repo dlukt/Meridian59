@@ -52,6 +52,7 @@ ccall_proc ccall_table[MAX_C_FUNCTION];
 int done;
 
 /* local function prototypes */
+#ifndef UNIT_TEST_SENDMSG
 int InterpretAtMessage(int object_id,class_node* c,message_node* m,
 					   int num_sent_parms,parm_node sent_parms[],
 					   val_type *ret_val);
@@ -64,6 +65,7 @@ static __inline void InterpretBinaryAssign(object_node *o,local_var_type *local_
 static __inline void InterpretGoto(object_node *o,local_var_type *local_vars,
 				   opcode_type opcode,char *inst_start);
 static __inline void InterpretCall(object_node **o_ptr,int object_id,local_var_type *local_vars,opcode_type opcode);
+#endif
 
 void InitProfiling(void)
 {
@@ -87,6 +89,7 @@ void InitProfiling(void)
 	kod_stat.message_depth_highest = 0;
 	kod_stat.interpreting_class = INVALID_CLASS;
 	kod_stat.debugging = ConfigBool(DEBUG_UNINITIALIZED);
+	kod_stat.debug_initlocals = ConfigBool(DEBUG_INITLOCALS);
 
 	for (i=0;i<MAX_C_FUNCTION;i++)
 		kod_stat.c_count[i] = 0;
@@ -96,6 +99,7 @@ void InitProfiling(void)
 	done = 1;
 }
 
+#ifndef UNIT_TEST_SENDMSG
 void InitBkodInterpret(void)
 {
 	int i;
@@ -183,6 +187,7 @@ void InitBkodInterpret(void)
 
 	ccall_table[SENDWEBHOOK] = C_SendWebhook;
 }
+#endif
 
 /* this pointer only makes sense when interpreting (used by bprintf only) */
 
@@ -255,6 +260,7 @@ blak_int SendTopLevelBlakodMessage(int object_id,int message_id,int num_parms,pa
 	}
 
 	kod_stat.debugging = ConfigBool(DEBUG_UNINITIALIZED);
+	kod_stat.debug_initlocals = ConfigBool(DEBUG_INITLOCALS);
 
 	start_time = GetMilliCount();
 	kod_stat.num_top_level_messages++;
@@ -332,6 +338,7 @@ typedef struct {
 	parm_node *parm;
 } ClassMessage, *PClassMessage;
 
+#ifndef UNIT_TEST_SENDMSG
 static ClassMessage classMsg;
 static int numExecuted;
 
@@ -565,7 +572,7 @@ int InterpretAtMessage(int object_id,class_node* c,message_node* m,
 		return RETURN_NO_PROPAGATE;
 	}
 
-	if (ConfigBool(DEBUG_INITLOCALS))
+	if (kod_stat.debug_initlocals)
 	{
 		parm_init_value.v.tag = TAG_INVALID;
 		parm_init_value.v.data = 1;
@@ -1276,3 +1283,4 @@ std::string BlakodStackInfo()
 	}
 	return buf;
 }
+#endif
