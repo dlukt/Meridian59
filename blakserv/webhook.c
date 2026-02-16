@@ -15,6 +15,7 @@
 */
 
 #include "blakserv.h"
+#include "json_utils.h"
 
 // Configuration constants
 static const int MAX_WEBHOOK_PIPES = 10;
@@ -90,19 +91,17 @@ bool SendWebhookMessage(const char* message, int len)
         return false;
     }
 
-    char json_message[1024];
-    const char* message_to_send;
-    int json_len;
+    std::string message_to_send;
     
     // If message already starts with '{', assume it's already JSON and skip wrapping
     if (message[0] == '{') {
-        message_to_send = message;
-        json_len = len;
+        message_to_send = std::string(message, len);
     } else {
         // Legacy format: wrap plain text in JSON with timestamp
-        format_json_message(message, len, json_message, sizeof(json_message));
-        message_to_send = json_message;
-        json_len = (int)strlen(json_message);
+        time_t now = time(NULL);
+        // Use JsonEscape to prevent JSON injection and handle special characters
+        std::string escaped_message = JsonEscape(std::string(message, len));
+        message_to_send = "{\"timestamp\":" + std::to_string((long)now) + ",\"message\":\"" + escaped_message + "\"}";
     }
 
     // Try to send using round-robin across all pipes
@@ -123,7 +122,7 @@ bool SendWebhookMessage(const char* message, int len)
         // Try to send message
         if (pipe_connected[pipe_index]) {
             bool is_permanent_error = false;
-            if (write_webhook_pipe(pipe_handles[pipe_index], message_to_send, json_len, &is_permanent_error)) {
+            if (write_webhook_pipe(pipe_handles[pipe_index], message_to_send.c_str(), (int)message_to_send.length(), &is_permanent_error)) {
                 last_pipe_index = (pipe_index + 1) % MAX_WEBHOOK_PIPES;
                 return true;
             }
@@ -147,19 +146,6 @@ static void generate_pipe_name(int pipe_index, char *buffer, size_t buffer_size)
 #else
     snprintf(buffer, buffer_size, "/tmp/%sm59apiwebhook%d", pipe_prefix, pipe_index);
 #endif
-}
-
-static void format_json_message(const char *message, int len, char *output, size_t output_size)
-{
-    time_t now = time(NULL);
-    
-    // Truncate message if too long
-    int max_msg_len = (int)(output_size - 50);
-    if (len > max_msg_len) {
-        len = max_msg_len;
-    }
-
-    snprintf(output, output_size, "{\"timestamp\":%ld,\"message\":\"%.*s\"}", (long)now, len, message);
 }
 
 static HANDLE open_webhook_pipe(const char *pipe_name)
