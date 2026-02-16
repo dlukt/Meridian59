@@ -83,6 +83,7 @@ OBJS =  \
 	$(OUTDIR)\fileutil.obj \
 	$(OUTDIR)\osd_windows.obj \
 	$(OUTDIR)\webhook.obj \
+	$(OUTDIR)\webhook_message.obj \
 	$(OUTDIR)\json_utils.obj \
 
 

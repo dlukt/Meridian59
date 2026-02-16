@@ -345,6 +345,10 @@ int main(void)
     failures += run_test("test_format_fatal_error", test_format_fatal_error, &tests_run);
     failures += run_test("test_format_fatal_error_buffer_limit", test_format_fatal_error_buffer_limit, &tests_run);
 
+    // Run webhook_message.c tests
+    extern void run_webhook_message_tests(int *tests_run, int *failures);
+    run_webhook_message_tests(&tests_run, &failures);
+
     if (failures != 0)
     {
         fprintf(stderr, "%d test(s) failed.\n", failures);
