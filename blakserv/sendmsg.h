@@ -57,6 +57,7 @@ typedef struct
    int interpreting_class;
 
    int debugging;
+   int debug_initlocals;
 
    /* the number of calls to each C function */
    int c_count[MAX_C_FUNCTION];
