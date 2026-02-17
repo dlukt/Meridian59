@@ -47,7 +47,9 @@ typedef blak_int (*ccall_proc)(int object_id,local_var_type *local_vars,
                                int num_normal_parms,parm_node normal_parm_array[],
                                int num_name_parms,parm_node name_parm_array[]);
 
+#if !defined(UNIT_TEST_SENDMSG) || defined(UNIT_TEST_INTERPRET_CALL)
 ccall_proc ccall_table[MAX_C_FUNCTION];
+#endif
 
 int done;
 
@@ -56,6 +58,9 @@ int done;
 int InterpretAtMessage(int object_id,class_node* c,message_node* m,
 					   int num_sent_parms,parm_node sent_parms[],
 					   val_type *ret_val);
+#endif
+
+#if !defined(UNIT_TEST_SENDMSG) || defined(UNIT_TEST_INTERPRET_CALL)
 static __inline void StoreValue(int object_id,local_var_type *local_vars,int data_type,int data,
 						 val_type new_data);
 static __inline void StoreValue(object_node *o,local_var_type *local_vars,int data_type,int data,
@@ -512,8 +517,11 @@ blak_int SendBlakodMessage(int object_id,int message_id,int num_parms,parm_node 
 
 	return message_ret.int_val;
 }
+#endif
 
 /* interpret code below here */
+
+#if !defined(UNIT_TEST_SENDMSG) || defined(UNIT_TEST_INTERPRET_CALL)
 
 #define get_byte() (*bkod++)
 
@@ -526,6 +534,7 @@ __inline unsigned int get_int()
 __inline blak_int get_blakint() {
   return val32to64(get_int());
 }
+#endif
 
 
 /* before calling this, you MUST set bkod to point to valid bkod. */
@@ -533,6 +542,7 @@ __inline blak_int get_blakint() {
 /* returns either RETURN_PROPAGATE or RETURN_NO_PROPAGATE.  If no propagate,
 * then the return value in ret_val is good.
 */
+#ifndef UNIT_TEST_SENDMSG
 int InterpretAtMessage(int object_id,class_node* c,message_node* m,
 					   int num_sent_parms,
 					   parm_node sent_parms[],val_type *ret_val)
@@ -700,8 +710,12 @@ int InterpretAtMessage(int object_id,class_node* c,message_node* m,
 	}
 }
 
+#endif
+
 /* RetrieveValue used to be here, but is inline, and used in ccode.c too, so it's
 in sendmsg.h now */
+
+#if !defined(UNIT_TEST_SENDMSG) || defined(UNIT_TEST_INTERPRET_CALL)
 
 static __inline void StoreValue(int object_id,local_var_type *local_vars,int data_type,int data,
 						 val_type new_data)
@@ -1192,6 +1206,7 @@ static __inline bool InterpretCall(object_node **o_ptr,int object_id,local_var_t
 
 	return true;
 }
+#endif
 
 std::string BlakodDebugInfo()
 {
@@ -1289,4 +1304,3 @@ std::string BlakodStackInfo()
 	}
 	return buf;
 }
-#endif
