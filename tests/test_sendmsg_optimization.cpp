@@ -82,6 +82,12 @@ message_node *GetMessageByID(int class_id, int message_id, class_node **c_ret) {
     return nullptr;
 }
 
+// Stub for GetSourceLine which is called by BlakodDebugInfo and BlakodStackInfo
+int GetSourceLine(class_node *c, char *bkod) {
+    (void)c; (void)bkod;
+    return 0;
+}
+
 // Stub for SendBlakodMessage which is called by SendTopLevelBlakodMessage
 blak_int SendBlakodMessage(int object_id,int message_id,int num_parms,parm_node parms[]) {
     // We don't need to implement logic, just return something
