@@ -52,6 +52,13 @@ ccall_proc ccall_table[MAX_C_FUNCTION];
 int done;
 
 /* local function prototypes */
+
+// Macros for opcode decoding (LSB first: source2, source1, dest, command)
+#define OP_SOURCE2(b)  ((b) & 0x03)
+#define OP_SOURCE1(b)  (((b) >> 2) & 0x03)
+#define OP_DEST(b)     (((b) >> 4) & 0x01)
+#define OP_COMMAND(b)  (((b) >> 5) & 0x07)
+
 #ifndef UNIT_TEST_SENDMSG
 int InterpretAtMessage(int object_id,class_node* c,message_node* m,
 					   int num_sent_parms,parm_node sent_parms[],
@@ -60,11 +67,11 @@ static __inline void StoreValue(int object_id,local_var_type *local_vars,int dat
 						 val_type new_data);
 static __inline void StoreValue(object_node *o,local_var_type *local_vars,int data_type,int data,
 						 val_type new_data);
-static __inline void InterpretUnaryAssign(object_node *o,local_var_type *local_vars,opcode_type opcode);
-static __inline void InterpretBinaryAssign(object_node *o,local_var_type *local_vars,opcode_type opcode);
+static __inline void InterpretUnaryAssign(object_node *o,local_var_type *local_vars,unsigned char op_byte);
+static __inline void InterpretBinaryAssign(object_node *o,local_var_type *local_vars,unsigned char op_byte);
 static __inline void InterpretGoto(object_node *o,local_var_type *local_vars,
-				   opcode_type opcode,char *inst_start);
-static __inline void InterpretCall(object_node **o_ptr,int object_id,local_var_type *local_vars,opcode_type opcode);
+				   unsigned char op_byte,char *inst_start);
+static __inline void InterpretCall(object_node **o_ptr,int object_id,local_var_type *local_vars,unsigned char op_byte);
 #endif
 
 void InitProfiling(void)
@@ -537,8 +544,7 @@ int InterpretAtMessage(int object_id,class_node* c,message_node* m,
 					   int num_sent_parms,
 					   parm_node sent_parms[],val_type *ret_val)
 {
-	opcode_type opcode;
-	char opcode_char;
+	unsigned char op_byte;
 	char num_locals,num_parms;
 	local_var_type local_vars;
 	int parm_id;
@@ -643,31 +649,25 @@ int InterpretAtMessage(int object_id,class_node* c,message_node* m,
 			return RETURN_NO_PROPAGATE;
 		}
 
-		opcode_char = get_byte();
-
-		//memcpy(&opcode,&opcode_char,1);
-		{
-			char *ch=(char*)&opcode;
-			*ch = opcode_char ;
-		}
+		op_byte = (unsigned char)get_byte();
 
 		/* use continues instead of breaks here since there is nothing
 		after the switch, for efficiency */
 
-		switch (opcode.command)
+		switch (OP_COMMAND(op_byte))
 		{
 			case UNARY_ASSIGN :
-				InterpretUnaryAssign(o,&local_vars,opcode);
+				InterpretUnaryAssign(o,&local_vars,op_byte);
 				continue;
 			case BINARY_ASSIGN :
-				InterpretBinaryAssign(o,&local_vars,opcode);
+				InterpretBinaryAssign(o,&local_vars,op_byte);
 				continue;
 			case GOTO :
 				inst_start = bkod - 1; /* we've read one byte of instruction so far */
-				InterpretGoto(o,&local_vars,opcode,inst_start);
+				InterpretGoto(o,&local_vars,op_byte,inst_start);
 				continue;
 			case CALL :
-				InterpretCall(&o,object_id,&local_vars,opcode);
+				InterpretCall(&o,object_id,&local_vars,op_byte);
 				/* o is refreshed inside InterpretCall */
 				if (o == NULL)
 				{
@@ -677,19 +677,19 @@ int InterpretAtMessage(int object_id,class_node* c,message_node* m,
 				}
 				continue;
 			case RETURN :
-				if (opcode.dest == PROPAGATE)
+				if (OP_DEST(op_byte) == PROPAGATE)
 					return RETURN_PROPAGATE;
 				else
 				{
 					blak_int data;
 					data = get_blakint();
-					*ret_val = RetrieveValue(o,&local_vars,opcode.source1,data);
+					*ret_val = RetrieveValue(o,&local_vars,OP_SOURCE1(op_byte),data);
 					return RETURN_NO_PROPAGATE;
 				}
 				/* can't get here */
 					continue;
 			default :
-				bprintf("InterpretAtMessage found INVALID OPCODE command %i.  die.\n", opcode.command);
+				bprintf("InterpretAtMessage found INVALID OPCODE command %i.  die.\n", OP_COMMAND(op_byte));
 				FlushDefaultChannels();
 				continue;
 		}
@@ -813,7 +813,7 @@ static __inline void StoreValue(object_node *o,local_var_type *local_vars,int da
 	}
 }
 
-static __inline void InterpretUnaryAssign(object_node *o,local_var_type *local_vars,opcode_type opcode)
+static __inline void InterpretUnaryAssign(object_node *o,local_var_type *local_vars,unsigned char op_byte)
 {
 	char info;
 	int dest;
@@ -824,7 +824,7 @@ static __inline void InterpretUnaryAssign(object_node *o,local_var_type *local_v
 	dest = get_int();
 	source = get_blakint();
 
-	source_data = RetrieveValue(o,local_vars,opcode.source1,source);
+	source_data = RetrieveValue(o,local_vars,OP_SOURCE1(op_byte),source);
 
 	switch (info)
 	{
@@ -863,10 +863,10 @@ static __inline void InterpretUnaryAssign(object_node *o,local_var_type *local_v
 		break;
 	}
 
-	StoreValue(o,local_vars,opcode.dest,dest,source_data);
+	StoreValue(o,local_vars,OP_DEST(op_byte),dest,source_data);
 }
 
-static __inline void InterpretBinaryAssign(object_node *o,local_var_type *local_vars,opcode_type opcode)
+static __inline void InterpretBinaryAssign(object_node *o,local_var_type *local_vars,unsigned char op_byte)
 {
 	char info;
   int dest;
@@ -878,8 +878,8 @@ static __inline void InterpretBinaryAssign(object_node *o,local_var_type *local_
 	source1 = get_blakint();
 	source2 = get_blakint();
 
-	source1_data = RetrieveValue(o,local_vars,opcode.source1,source1);
-	source2_data = RetrieveValue(o,local_vars,opcode.source2,source2);
+	source1_data = RetrieveValue(o,local_vars,OP_SOURCE1(op_byte),source1);
+	source2_data = RetrieveValue(o,local_vars,OP_SOURCE2(op_byte),source2);
 
 	/*
 	if (source1_data.v.tag != source2_data.v.tag)
@@ -1064,11 +1064,11 @@ static __inline void InterpretBinaryAssign(object_node *o,local_var_type *local_
 		break;
    }
 
-   StoreValue(o,local_vars,opcode.dest,dest,source1_data);
+   StoreValue(o,local_vars,OP_DEST(op_byte),dest,source1_data);
 }
 
 static __inline void InterpretGoto(object_node *o,local_var_type *local_vars,
-				   opcode_type opcode,char *inst_start)
+				   unsigned char op_byte,char *inst_start)
 {
 	int dest_addr;
 	blak_int var_check;
@@ -1081,20 +1081,20 @@ static __inline void InterpretGoto(object_node *o,local_var_type *local_vars,
 
 	/* unconditional gotos have source2 bits set--otherwise, it's a goto
 	only if the source1 bits have a non-zero var */
-	if (opcode.source2 == GOTO_UNCONDITIONAL)
+	if (OP_SOURCE2(op_byte) == GOTO_UNCONDITIONAL)
 	{
 		bkod = inst_start + dest_addr;
 		return;
 	}
 
 	var_check = get_blakint();
-	check_data = RetrieveValue(o,local_vars,opcode.source1,var_check);
-	if ((opcode.dest == GOTO_IF_TRUE && check_data.v.data != 0) ||
-		(opcode.dest == GOTO_IF_FALSE && check_data.v.data == 0))
+	check_data = RetrieveValue(o,local_vars,OP_SOURCE1(op_byte),var_check);
+	if ((OP_DEST(op_byte) == GOTO_IF_TRUE && check_data.v.data != 0) ||
+		(OP_DEST(op_byte) == GOTO_IF_FALSE && check_data.v.data == 0))
 		bkod = inst_start + dest_addr;
 }
 
-static __inline void InterpretCall(object_node **o_ptr,int object_id,local_var_type *local_vars,opcode_type opcode)
+static __inline void InterpretCall(object_node **o_ptr,int object_id,local_var_type *local_vars,unsigned char op_byte)
 {
 	parm_node normal_parm_array[MAX_C_PARMS],name_parm_array[MAX_NAME_PARMS];
 	unsigned char info,num_normal_parms,num_name_parms,initial_type;
@@ -1111,7 +1111,7 @@ static __inline void InterpretCall(object_node **o_ptr,int object_id,local_var_t
 
 	info = get_byte(); /* get function id */
 
-	switch(opcode.source1)
+	switch(OP_SOURCE1(op_byte))
 	{
 	case CALL_NO_ASSIGN :
 		break;
@@ -1175,14 +1175,14 @@ static __inline void InterpretCall(object_node **o_ptr,int object_id,local_var_t
 	o = GetObjectByID(object_id);
 	*o_ptr = o;
 
-	switch(opcode.source1)
+	switch(OP_SOURCE1(op_byte))
 	{
 		case CALL_NO_ASSIGN :
 			break;
 		case CALL_ASSIGN_LOCAL_VAR :
 		case CALL_ASSIGN_PROPERTY :
 			/* Use refreshed object pointer to avoid internal GetObjectByID lookup */
-			StoreValue(o,local_vars,opcode.source1,assign_index,call_return);
+			StoreValue(o,local_vars,OP_SOURCE1(op_byte),assign_index,call_return);
 			break;
 	}
 }
