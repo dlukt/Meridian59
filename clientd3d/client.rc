@@ -3369,6 +3369,8 @@ BEGIN
 	IDS_TOOLTIP_PROFANE_EDIT        "Enter a word to add or remove from the filter list."
 	IDS_TOOLTIP_PROFANE_ADD         "Add the entered word to your custom profanity list."
 	IDS_TOOLTIP_PROFANE_REMOVE      "Remove the entered word from your custom profanity list."
+	IDS_TOOLTIP_MAP_ANNOTATIONS     "Show or hide user-created map annotations."
+	IDS_TOOLTIP_MAP_ZOOM_LIMIT      "Adjust the zoom level at which map annotations appear."
 END
 
 
