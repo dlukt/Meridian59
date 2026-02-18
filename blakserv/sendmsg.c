@@ -64,7 +64,7 @@ static __inline void InterpretUnaryAssign(object_node *o,local_var_type *local_v
 static __inline void InterpretBinaryAssign(object_node *o,local_var_type *local_vars,opcode_type opcode);
 static __inline void InterpretGoto(object_node *o,local_var_type *local_vars,
 				   opcode_type opcode,char *inst_start);
-static __inline void InterpretCall(object_node **o_ptr,int object_id,local_var_type *local_vars,opcode_type opcode);
+static __inline bool InterpretCall(object_node **o_ptr,int object_id,local_var_type *local_vars,opcode_type opcode);
 #endif
 
 void InitProfiling(void)
@@ -667,7 +667,11 @@ int InterpretAtMessage(int object_id,class_node* c,message_node* m,
 				InterpretGoto(o,&local_vars,opcode,inst_start);
 				continue;
 			case CALL :
-				InterpretCall(&o,object_id,&local_vars,opcode);
+				if (!InterpretCall(&o,object_id,&local_vars,opcode))
+				{
+					(*ret_val).int_val = NIL;
+					return RETURN_NO_PROPAGATE;
+				}
 				/* o is refreshed inside InterpretCall */
 				if (o == NULL)
 				{
@@ -1094,7 +1098,7 @@ static __inline void InterpretGoto(object_node *o,local_var_type *local_vars,
 		bkod = inst_start + dest_addr;
 }
 
-static __inline void InterpretCall(object_node **o_ptr,int object_id,local_var_type *local_vars,opcode_type opcode)
+static __inline bool InterpretCall(object_node **o_ptr,int object_id,local_var_type *local_vars,opcode_type opcode)
 {
 	parm_node normal_parm_array[MAX_C_PARMS],name_parm_array[MAX_NAME_PARMS];
 	unsigned char info,num_normal_parms,num_name_parms,initial_type;
@@ -1128,7 +1132,7 @@ static __inline void InterpretCall(object_node **o_ptr,int object_id,local_var_t
 		bprintf("InterpretCall found a call w/ more than %i parms, DEATH\n",
 			MAX_C_PARMS);
 		FlushDefaultChannels();
-		num_normal_parms = MAX_C_PARMS;
+		return false;
 	}
 
 	for (i=0;i<num_normal_parms;i++)
@@ -1144,7 +1148,7 @@ static __inline void InterpretCall(object_node **o_ptr,int object_id,local_var_t
 		bprintf("InterpretCall found a call w/ more than %i name parms, DEATH\n",
 			MAX_NAME_PARMS);
 		FlushDefaultChannels();
-		num_name_parms = MAX_NAME_PARMS;
+		return false;
 	}
 
 	for (i=0;i<num_name_parms;i++)
@@ -1185,6 +1189,7 @@ static __inline void InterpretCall(object_node **o_ptr,int object_id,local_var_t
 			StoreValue(o,local_vars,opcode.source1,assign_index,call_return);
 			break;
 	}
+	return true;
 }
 
 std::string BlakodDebugInfo()
