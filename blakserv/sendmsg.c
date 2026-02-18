@@ -52,7 +52,7 @@ ccall_proc ccall_table[MAX_C_FUNCTION];
 int done;
 
 /* local function prototypes */
-#ifndef UNIT_TEST_SENDMSG
+#if !defined(UNIT_TEST_SENDMSG) || defined(UNIT_TEST_INTERPRETER)
 int InterpretAtMessage(int object_id,class_node* c,message_node* m,
 					   int num_sent_parms,parm_node sent_parms[],
 					   val_type *ret_val);
@@ -512,6 +512,9 @@ blak_int SendBlakodMessage(int object_id,int message_id,int num_parms,parm_node 
 
 	return message_ret.int_val;
 }
+#endif
+
+#if !defined(UNIT_TEST_SENDMSG) || defined(UNIT_TEST_INTERPRETER)
 
 /* interpret code below here */
 
