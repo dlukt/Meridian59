@@ -721,6 +721,10 @@ static INT_PTR CALLBACK MapPreferencesDlgProc(HWND hDlg, UINT message, WPARAM wP
     case WM_USER_REINITDIALOG:
     case WM_INITDIALOG:
         InitializeMapKeyBindings(hDlg);
+
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_MAP_ANNOTATIONS), hInst, IDS_TOOLTIP_MAP_ANNOTATIONS);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_ANNOTATION_ZOOM_LIMIT), hInst, IDS_TOOLTIP_ANNOTATION_ZOOM_LIMIT);
+
         return (INT_PTR)TRUE;
 
     case WM_COMMAND:
