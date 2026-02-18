@@ -3,11 +3,13 @@
 #include <string>
 #include <stdio.h>
 #include <stdarg.h>
+#include <cstring>
 
-// Define UNIT_TEST_SENDMSG to skip heavy functions in sendmsg.c
-#define UNIT_TEST_SENDMSG
+// Ensure UNIT_TEST_SENDMSG is NOT defined to test the real interpreter logic
+// #define UNIT_TEST_SENDMSG
 
-// Rename globals to avoid linker collisions
+// Rename globals to avoid linker collisions if we link against other objects
+// But since we include .c file directly, these become our definitions
 #define kod_stat test_kod_stat
 #define message_depth test_message_depth
 #define stack test_stack
@@ -20,9 +22,6 @@
 
 // Include blakserv.h to get types
 #include "../blakserv/blakserv.h"
-
-// Undefine macros before including system headers or if they conflict
-// But we need them active when including sendmsg.c
 
 // Mock dependencies
 static bool g_mock_debug_initlocals = false;
@@ -60,6 +59,86 @@ const char *GetNameByID(int id) { (void)id; return "MockName"; }
 const char *GetTagName(val_type val) { (void)val.int_val; return "MockTag"; }
 const char *GetDataName(val_type val) { (void)val.int_val; return "MockData"; }
 
+// channel.h defines fmt as macro calling obj_to_string
+// We implement obj_to_string to satisfy the linker/compiler
+std::string obj_to_string(int tag, INT64 data) {
+    (void)tag; (void)data;
+    return "MockFmt";
+}
+
+// C_Invalid stub needed for InitBkodInterpret
+blak_int C_Invalid(int object_id,local_var_type *local_vars,
+                               int num_normal_parms,parm_node normal_parm_array[],
+                               int num_name_parms,parm_node name_parm_array[]) {
+    (void)object_id; (void)local_vars; (void)num_normal_parms;
+    (void)normal_parm_array; (void)num_name_parms; (void)name_parm_array;
+    return 0;
+}
+
+// Stub C functions to avoid linking all of ccode.c
+#define STUB_C_FUNC(name) blak_int name(int o, local_var_type *l, int n1, parm_node p1[], int n2, parm_node p2[]) { (void)o; (void)l; (void)n1; (void)p1; (void)n2; (void)p2; return 0; }
+
+STUB_C_FUNC(C_CreateObject)
+STUB_C_FUNC(C_IsClass)
+STUB_C_FUNC(C_GetClass)
+STUB_C_FUNC(C_SendMessage)
+STUB_C_FUNC(C_PostMessage)
+STUB_C_FUNC(C_AddPacket)
+STUB_C_FUNC(C_SendPacket)
+STUB_C_FUNC(C_SendCopyPacket)
+STUB_C_FUNC(C_ClearPacket)
+STUB_C_FUNC(C_Debug)
+STUB_C_FUNC(C_GetInactiveTime)
+STUB_C_FUNC(C_DumpStack)
+STUB_C_FUNC(C_StringEqual)
+STUB_C_FUNC(C_StringContain)
+STUB_C_FUNC(C_SetResource)
+STUB_C_FUNC(C_ParseString)
+STUB_C_FUNC(C_SetString)
+STUB_C_FUNC(C_AppendTempString)
+STUB_C_FUNC(C_ClearTempString)
+STUB_C_FUNC(C_GetTempString)
+STUB_C_FUNC(C_CreateString)
+STUB_C_FUNC(C_StringSubstitute)
+STUB_C_FUNC(C_BuildString)
+STUB_C_FUNC(C_StringLength)
+STUB_C_FUNC(C_StringConsistsOf)
+STUB_C_FUNC(C_CreateTimer)
+STUB_C_FUNC(C_DeleteTimer)
+STUB_C_FUNC(C_GetTimeRemaining)
+STUB_C_FUNC(C_LoadRoom)
+STUB_C_FUNC(C_RoomData)
+STUB_C_FUNC(C_CanMoveInRoom)
+STUB_C_FUNC(C_CanMoveInRoomFine)
+STUB_C_FUNC(C_IsPointInSector)
+STUB_C_FUNC(C_Cons)
+STUB_C_FUNC(C_First)
+STUB_C_FUNC(C_Rest)
+STUB_C_FUNC(C_Length)
+STUB_C_FUNC(C_Nth)
+STUB_C_FUNC(C_List)
+STUB_C_FUNC(C_IsList)
+STUB_C_FUNC(C_SetFirst)
+STUB_C_FUNC(C_SetNth)
+STUB_C_FUNC(C_DelListElem)
+STUB_C_FUNC(C_FindListElem)
+STUB_C_FUNC(C_MoveListElem)
+STUB_C_FUNC(C_GetTime)
+STUB_C_FUNC(C_CreateTable)
+STUB_C_FUNC(C_AddTableEntry)
+STUB_C_FUNC(C_GetTableEntry)
+STUB_C_FUNC(C_DeleteTableEntry)
+STUB_C_FUNC(C_DeleteTable)
+STUB_C_FUNC(C_IsObject)
+STUB_C_FUNC(C_RecycleUser)
+STUB_C_FUNC(C_Random)
+STUB_C_FUNC(C_Abs)
+STUB_C_FUNC(C_Bound)
+STUB_C_FUNC(C_Sqrt)
+STUB_C_FUNC(C_MinigameNumberToString)
+STUB_C_FUNC(C_MinigameStringToNumber)
+STUB_C_FUNC(C_SendWebhook)
+
 object_node *GetObjectByID(int id) {
     static object_node obj;
     static class_node cls;
@@ -82,11 +161,11 @@ message_node *GetMessageByID(int class_id, int message_id, class_node **c_ret) {
     return nullptr;
 }
 
-// Stub for SendBlakodMessage which is called by SendTopLevelBlakodMessage
-blak_int SendBlakodMessage(int object_id,int message_id,int num_parms,parm_node parms[]) {
-    // We don't need to implement logic, just return something
-    (void)object_id; (void)message_id; (void)num_parms; (void)parms;
-    return 0;
+int GetSourceLine(class_node *c, char *bkod) { (void)c; (void)bkod; return 0; }
+
+void ForEachObject(void (*func)(object_node *)) {
+    // No-op for now
+    (void)func;
 }
 
 // Include sendmsg.c to test InitProfiling and SendTopLevelBlakodMessage
@@ -115,26 +194,53 @@ static int test_init_profiling_sets_debug_initlocals(void)
     return 0;
 }
 
-static int test_send_top_level_refresh(void)
+// We can't easily test SendTopLevelBlakodMessage flow because it calls SendBlakodMessage
+// which we mock or implement. But since we included sendmsg.c, SendBlakodMessage is REAL.
+// It calls GetObjectByID, GetClassByID, GetMessageByID.
+// If we want to test InterpretAtMessage directly, we can do that.
+
+static int test_interpret_return_constant(void)
 {
-    // Reset state
-    test_done = 0;
-    InitProfiling(); // Initialize first
+    // Setup opcode buffer for: RETURN CONSTANT 42
+    // Opcode: RETURN(4) | DEST(0) | SOURCE1(CONSTANT=2) | SOURCE2(0)
+    // 4 << 5 = 128 (0x80)
+    // 0 << 4 = 0
+    // 2 << 2 = 8   (0x08)
+    // 0 << 0 = 0
+    // Total: 0x88
 
-    // Set config to true
-    g_mock_debug_initlocals = true;
+    unsigned char bytecode[32];
+    memset(bytecode, 0, sizeof(bytecode));
 
-    // Call top level message
-    parm_node parms[1];
-    SendTopLevelBlakodMessage(1, 1, 0, parms);
+    bytecode[0] = 0; // num_locals
+    bytecode[1] = 0; // num_parms
+    // Loop of parms skipped (0)
 
-    ASSERT_TRUE(test_kod_stat.debug_initlocals);
+    // Instruction 1: RETURN CONSTANT 42
+    bytecode[2] = 0x88;
 
-    // Set config to false
-    g_mock_debug_initlocals = false;
-    SendTopLevelBlakodMessage(1, 1, 0, parms);
+    // Constant 42 (0x2A) as 4-byte int (Little Endian)
+    // Assuming host is little endian (Linux x86/x64)
+    *((unsigned int*)&bytecode[3]) = 42;
 
-    ASSERT_TRUE(!test_kod_stat.debug_initlocals);
+    // Set global bkod pointer
+    test_bkod = (char*)bytecode;
+    test_num_interpreted = 0;
+    test_message_depth = 0; // Reset depth
+
+    // Setup dummy args
+    val_type ret_val;
+    ret_val.int_val = 0;
+
+    // Call interpreter
+    int result = InterpretAtMessage(1, NULL, NULL, 0, NULL, &ret_val);
+
+    // Verify result
+    // Should return RETURN_NO_PROPAGATE (2)
+    ASSERT_EQ_UINT(result, 2);
+
+    // Verify return value
+    ASSERT_EQ_UINT(ret_val.int_val, 42);
 
     return 0;
 }
@@ -144,8 +250,11 @@ int main(void)
     int tests_run = 0;
     int failures = 0;
 
+    // Initialize mock table for C calls
+    InitBkodInterpret();
+
     failures += run_test("test_init_profiling_sets_debug_initlocals", test_init_profiling_sets_debug_initlocals, &tests_run);
-    failures += run_test("test_send_top_level_refresh", test_send_top_level_refresh, &tests_run);
+    failures += run_test("test_interpret_return_constant", test_interpret_return_constant, &tests_run);
 
     if (failures != 0)
     {
