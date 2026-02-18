@@ -7,7 +7,10 @@ SOURCES = test_main.cpp test_channel.cpp test_json_utils.cpp test_parse_logic.cp
 TARGET_SENDMSG = sendmsg_tests
 SOURCES_SENDMSG = test_sendmsg_optimization.cpp
 
-all: $(TARGET) $(TARGET_SENDMSG)
+TARGET_INTERP = interpreter_tests
+SOURCES_INTERP = test_interpreter.cpp
+
+all: $(TARGET) $(TARGET_SENDMSG) $(TARGET_INTERP)
 
 $(TARGET): $(SOURCES)
 	$(CXX) $(CXXFLAGS) -o $(TARGET) $(SOURCES)
@@ -15,11 +18,15 @@ $(TARGET): $(SOURCES)
 $(TARGET_SENDMSG): $(SOURCES_SENDMSG)
 	$(CXX) $(CXXFLAGS) -o $(TARGET_SENDMSG) $(SOURCES_SENDMSG)
 
-test: $(TARGET) $(TARGET_SENDMSG)
+$(TARGET_INTERP): $(SOURCES_INTERP)
+	$(CXX) $(CXXFLAGS) -o $(TARGET_INTERP) $(SOURCES_INTERP)
+
+test: $(TARGET) $(TARGET_SENDMSG) $(TARGET_INTERP)
 	./$(TARGET)
 	./$(TARGET_SENDMSG)
+	./$(TARGET_INTERP)
 
 clean:
-	rm -f $(TARGET) $(TARGET_SENDMSG)
+	rm -f $(TARGET) $(TARGET_SENDMSG) $(TARGET_INTERP)
 
 .PHONY: all test clean
