@@ -32,34 +32,53 @@ void cprintf(int session_id,const char *fmt,...)
 
 void TermConvertBuffer(char *s,int len_s)
 {
-   int i;
+   int i = 0;
+   int cur_len = (int)strnlen(s, len_s);
 
    /* convert \n's to cr-lf pairs */
 
-   i = 0;
    while (s[i])
    {
       if (s[i] == '\n')
       {
-	 // newlines get a carriage return inserted
-	 memmove(s+i+2,s+i+1,len_s-i-2);
-	 s[i++] = '\r';
-	 s[i++] = '\n';
+         // We need cur_len + 2 <= len_s to expand safely
+         while (cur_len + 2 > len_s)
+         {
+             if (cur_len <= i) {
+                 s[len_s - 1] = '\0';
+                 return;
+             }
+             s[cur_len - 1] = '\0';
+             cur_len--;
+         }
+
+         if (cur_len <= i) {
+             s[len_s - 1] = '\0';
+             return;
+         }
+
+         // newlines get a carriage return inserted
+         memmove(s + i + 2, s + i + 1, cur_len - i);
+         s[i++] = '\r';
+         s[i++] = '\n';
+         cur_len++;
       }
       else if (s[i] == '\r')
       {
          // carriage returns in the original are stripped to avoid making \r\r\n's
-	 memmove(s+i,s+i+1,len_s-i-1);
+         memmove(s + i, s + i + 1, cur_len - i);
+         cur_len--;
+         // i not incremented
       }
       else
       {
-	 i++;
+         i++;
       }
-      if (i >= len_s-2)
-      {
-	 s[len_s-1] = '\0';
-	 //eprintf("TermConvertBuffer buffer too small\n");
-	 break;
+
+      // Safety check
+      if (i >= len_s - 1) {
+         s[len_s - 1] = '\0';
+         break;
       }
    }
 }
