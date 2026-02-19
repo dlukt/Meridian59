@@ -684,6 +684,8 @@
 #define IDS_TOOLTIP_PROFANE_REMOVE      4040
 #define IDS_TOOLTIP_MAP_ANNOTATIONS     4041
 #define IDS_TOOLTIP_ANNOTATION_ZOOM_LIMIT 4042
+#define IDS_TOOLTIP_MAINHELP            4043
+#define IDS_TOOLTIP_RESTOREDEFAULTS     4044
 
 // Next default values for new objects
 //

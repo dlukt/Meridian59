@@ -3371,6 +3371,8 @@ BEGIN
 	IDS_TOOLTIP_PROFANE_REMOVE      "Remove the entered word from your custom profanity list."
 	IDS_TOOLTIP_MAP_ANNOTATIONS     "Toggle whether annotations (notes) are displayed on the map."
 	IDS_TOOLTIP_ANNOTATION_ZOOM_LIMIT "Adjusts the zoom level at which text annotations stop displaying."
+	IDS_TOOLTIP_MAINHELP            "Displays detailed help information about key bindings."
+	IDS_TOOLTIP_RESTOREDEFAULTS     "Resets all key bindings and options to their original default settings."
 END
 
 

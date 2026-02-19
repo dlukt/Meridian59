@@ -985,6 +985,8 @@ static INT_PTR CALLBACK OptionsPreferencesDlgProc(HWND hDlg, UINT message, WPARA
         TooltipAddWindow(GetDlgItem(hDlg, IDC_SOFTWARE), hInst, IDS_TOOLTIP_SOFTWARE);
         TooltipAddWindow(GetDlgItem(hDlg, IDC_ATTACKONTARGET), hInst, IDS_TOOLTIP_ATTACKONTARGET);
         TooltipAddWindow(GetDlgItem(hDlg, IDC_GPU_EFFICIENCY), hInst, IDS_TOOLTIP_GPU_EFFICIENCY);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_MAINHELP), hInst, IDS_TOOLTIP_MAINHELP);
+        TooltipAddWindow(GetDlgItem(hDlg, IDC_RESTOREDEFAULTS), hInst, IDS_TOOLTIP_RESTOREDEFAULTS);
 
         return (INT_PTR)TRUE;
     case WM_COMMAND:
