@@ -4,6 +4,8 @@
 #include <string>
 #include <ctime>
 
+bool IsStructuredWebhookPayload(const std::string& message);
+
 /**
  * Constructs a webhook payload for sending messages.
  *
