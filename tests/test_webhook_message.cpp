@@ -96,7 +96,31 @@ static int test_construct_webhook_payload_trusted_extra_fields_wrapped(void)
     std::string message = "{\"event\":\"X\",\"params\":{\"a\":1},\"malicious\":\"code\"}";
     std::string expected = "{\"timestamp\":1234567890,\"message\":\"{\\\"event\\\":\\\"X\\\",\\\"params\\\":{\\\"a\\\":1},\\\"malicious\\\":\\\"code\\\"}\"}";
 
+    ASSERT_TRUE(!IsStructuredWebhookPayload(message));
     std::string result = ConstructWebhookPayload(message, timestamp, true);
+    ASSERT_TRUE(result == expected);
+    return 0;
+}
+
+static int test_construct_webhook_payload_trusted_extra_fields_before_params_wrapped(void)
+{
+    time_t timestamp = 1234567890;
+    std::string message = "{\"event\":\"UserKilled\",\"admin\":\"y\",\"params\":{}}";
+    std::string expected = "{\"timestamp\":1234567890,\"message\":\"{\\\"event\\\":\\\"UserKilled\\\",\\\"admin\\\":\\\"y\\\",\\\"params\\\":{}}\"}";
+
+    std::string result = ConstructWebhookPayload(message, timestamp, true);
+    ASSERT_TRUE(result == expected);
+    ASSERT_TRUE(!IsStructuredWebhookPayload(message));
+    return 0;
+}
+
+static int test_construct_webhook_payload_untrusted_structured_shape_wrapped(void)
+{
+    time_t timestamp = 1234567890;
+    std::string message = "{\"event\":\"UserKilled\",\"params\":{\"param1\":\"victim\"}}";
+    std::string expected = "{\"timestamp\":1234567890,\"message\":\"{\\\"event\\\":\\\"UserKilled\\\",\\\"params\\\":{\\\"param1\\\":\\\"victim\\\"}}\"}";
+
+    std::string result = ConstructWebhookPayload(message, timestamp, false);
     ASSERT_TRUE(result == expected);
     return 0;
 }
@@ -112,4 +136,6 @@ void run_webhook_message_tests(int *tests_run, int *failures)
     *failures += run_test("test_construct_webhook_payload_trusted_invalid_shape_wrapped", test_construct_webhook_payload_trusted_invalid_shape_wrapped, tests_run);
     *failures += run_test("test_is_structured_webhook_payload_empty_false", test_is_structured_webhook_payload_empty_false, tests_run);
     *failures += run_test("test_construct_webhook_payload_trusted_extra_fields_wrapped", test_construct_webhook_payload_trusted_extra_fields_wrapped, tests_run);
+    *failures += run_test("test_construct_webhook_payload_trusted_extra_fields_before_params_wrapped", test_construct_webhook_payload_trusted_extra_fields_before_params_wrapped, tests_run);
+    *failures += run_test("test_construct_webhook_payload_untrusted_structured_shape_wrapped", test_construct_webhook_payload_untrusted_structured_shape_wrapped, tests_run);
 }

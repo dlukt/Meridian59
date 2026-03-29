@@ -18,22 +18,54 @@
 bool IsStructuredWebhookPayload(const std::string& message)
 {
     static const std::string event_prefix = "{\"event\":\"";
-    static const std::string params_token = "\",\"params\":{";
-    size_t params_pos;
+    static const std::string params_token = ",\"params\":{";
+    size_t event_value_start;
+    size_t pos;
     size_t params_open_index;
     size_t params_close_index = std::string::npos;
     int depth = 0;
     bool in_string = false;
     bool escaped = false;
 
-    if (message.rfind(event_prefix, 0) != 0)
+    if (!message.starts_with(event_prefix))
         return false;
 
-    params_pos = message.find(params_token);
-    if (params_pos == std::string::npos)
+    event_value_start = event_prefix.size();
+    if (event_value_start >= message.size())
         return false;
 
-    params_open_index = params_pos + params_token.size() - 1; // '{' in ,"params":{
+    pos = event_value_start;
+    while (pos < message.size())
+    {
+        char c = message[pos];
+        if (escaped)
+        {
+            escaped = false;
+            pos++;
+            continue;
+        }
+        if (c == '\\')
+        {
+            escaped = true;
+            pos++;
+            continue;
+        }
+        if (c == '"')
+        {
+            pos++;
+            break;
+        }
+        pos++;
+    }
+    if (pos >= message.size())
+        return false;
+
+    if (pos + params_token.size() > message.size())
+        return false;
+    if (message.compare(pos, params_token.size(), params_token) != 0)
+        return false;
+
+    params_open_index = pos + params_token.size() - 1; // '{' in ,"params":{
     for (size_t i = 0; i < message.size(); ++i)
     {
         char c = message[i];
