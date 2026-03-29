@@ -16,19 +16,9 @@
 
 std::string ConstructWebhookPayload(const std::string& message, time_t timestamp)
 {
-    if (message.empty())
-    {
-        return "{\"timestamp\":" + std::to_string((long)timestamp) + ",\"message\":\"\"}";
-    }
-
-    // If message already starts with '{', assume it's already JSON and skip wrapping
-    if (message[0] == '{')
-    {
-        return message;
-    }
-
-    // Wrap plain text in JSON with timestamp
-    // Use JsonEscape to prevent JSON injection and handle special characters
+    // Always wrap and escape untrusted message input.
+    // This prevents JSON-structure injection (forged fields, altered schema)
+    // when messages begin with '{' but are not trusted structured payloads.
     std::string escaped_message = JsonEscape(message);
     return "{\"timestamp\":" + std::to_string((long)timestamp) + ",\"message\":\"" + escaped_message + "\"}";
 }

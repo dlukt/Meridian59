@@ -18,10 +18,9 @@ static int test_construct_webhook_payload_json(void)
 {
     time_t timestamp = 1234567890;
     std::string message = "{\"event\":\"test\"}";
-
-    // Should return as-is
+    std::string expected = "{\"timestamp\":1234567890,\"message\":\"{\\\"event\\\":\\\"test\\\"}\"}";
     std::string result = ConstructWebhookPayload(message, timestamp);
-    ASSERT_TRUE(result == message);
+    ASSERT_TRUE(result == expected);
     return 0;
 }
 
@@ -53,10 +52,22 @@ static int test_construct_webhook_payload_empty(void)
     return 0;
 }
 
+static int test_construct_webhook_payload_json_like_injection(void)
+{
+    time_t timestamp = 1234567890;
+    std::string message = "{\"event\":\"ok\"},\"admin\":true";
+    std::string expected = "{\"timestamp\":1234567890,\"message\":\"{\\\"event\\\":\\\"ok\\\"},\\\"admin\\\":true\"}";
+
+    std::string result = ConstructWebhookPayload(message, timestamp);
+    ASSERT_TRUE(result == expected);
+    return 0;
+}
+
 void run_webhook_message_tests(int *tests_run, int *failures)
 {
     *failures += run_test("test_construct_webhook_payload_simple", test_construct_webhook_payload_simple, tests_run);
     *failures += run_test("test_construct_webhook_payload_json", test_construct_webhook_payload_json, tests_run);
     *failures += run_test("test_construct_webhook_payload_injection", test_construct_webhook_payload_injection, tests_run);
     *failures += run_test("test_construct_webhook_payload_empty", test_construct_webhook_payload_empty, tests_run);
+    *failures += run_test("test_construct_webhook_payload_json_like_injection", test_construct_webhook_payload_json_like_injection, tests_run);
 }
