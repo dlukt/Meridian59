@@ -103,12 +103,12 @@ bool IsStructuredWebhookPayload(const std::string& message)
 
     // After params object closes, only the outer object close is allowed.
     size_t i = params_close_index + 1;
-    while (i < message.size() && isspace(static_cast<unsigned char>(message[i])))
+    while (i < message.size() && std::isspace(static_cast<unsigned char>(message[i])))
         i++;
     if (i >= message.size() || message[i] != '}')
         return false;
     i++;
-    while (i < message.size() && isspace(static_cast<unsigned char>(message[i])))
+    while (i < message.size() && std::isspace(static_cast<unsigned char>(message[i])))
         i++;
     return i == message.size();
 }
