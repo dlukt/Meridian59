@@ -20,6 +20,11 @@ bool IsStructuredWebhookPayload(const std::string& message);
  * @return The constructed JSON payload.
  */
 std::string ConstructWebhookPayload(const std::string& message, time_t timestamp, bool trusted_structured_json);
+
+/**
+ * Convenience overload that always treats the input as untrusted
+ * (equivalent to trusted_structured_json = false).
+ */
 std::string ConstructWebhookPayload(const std::string& message, time_t timestamp);
 
 #endif // WEBHOOK_MESSAGE_H
