@@ -92,8 +92,11 @@ bool SendWebhookMessage(const char* message, int len)
         return false;
     }
 
-    // Construct the payload using helper function
-    std::string message_to_send = ConstructWebhookPayload(std::string(message, len), time(NULL));
+    // Construct the payload using helper function.
+    // C_SendWebhook structured events are emitted as trusted raw JSON in this path.
+    std::string input_message(message, len);
+    bool trusted_structured_json = (input_message.rfind("{\"event\":\"", 0) == 0);
+    std::string message_to_send = ConstructWebhookPayload(input_message, time(NULL), trusted_structured_json);
 
     // Try to send using round-robin across all pipes
     for (int i = 0; i < MAX_WEBHOOK_PIPES; i++) {

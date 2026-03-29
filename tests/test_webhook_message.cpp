@@ -63,6 +63,27 @@ static int test_construct_webhook_payload_json_like_injection(void)
     return 0;
 }
 
+static int test_construct_webhook_payload_trusted_structured_passthrough(void)
+{
+    time_t timestamp = 1234567890;
+    std::string message = "{\"event\":\"UserKilled\",\"params\":{\"param1\":\"victim\"}}";
+
+    std::string result = ConstructWebhookPayload(message, timestamp, true);
+    ASSERT_TRUE(result == message);
+    return 0;
+}
+
+static int test_construct_webhook_payload_trusted_invalid_shape_wrapped(void)
+{
+    time_t timestamp = 1234567890;
+    std::string message = "{\"event\":\"UserKilled\",\"admin\":true}";
+    std::string expected = "{\"timestamp\":1234567890,\"message\":\"{\\\"event\\\":\\\"UserKilled\\\",\\\"admin\\\":true}\"}";
+
+    std::string result = ConstructWebhookPayload(message, timestamp, true);
+    ASSERT_TRUE(result == expected);
+    return 0;
+}
+
 void run_webhook_message_tests(int *tests_run, int *failures)
 {
     *failures += run_test("test_construct_webhook_payload_simple", test_construct_webhook_payload_simple, tests_run);
@@ -70,4 +91,6 @@ void run_webhook_message_tests(int *tests_run, int *failures)
     *failures += run_test("test_construct_webhook_payload_injection", test_construct_webhook_payload_injection, tests_run);
     *failures += run_test("test_construct_webhook_payload_empty", test_construct_webhook_payload_empty, tests_run);
     *failures += run_test("test_construct_webhook_payload_json_like_injection", test_construct_webhook_payload_json_like_injection, tests_run);
+    *failures += run_test("test_construct_webhook_payload_trusted_structured_passthrough", test_construct_webhook_payload_trusted_structured_passthrough, tests_run);
+    *failures += run_test("test_construct_webhook_payload_trusted_invalid_shape_wrapped", test_construct_webhook_payload_trusted_invalid_shape_wrapped, tests_run);
 }
