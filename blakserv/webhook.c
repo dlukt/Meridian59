@@ -86,14 +86,15 @@ bool IsWebhookEnabled(void)
     return webhook_initialized;
 }
 
-bool SendWebhookMessage(const char* message, int len)
+static bool SendWebhookMessageInternal(const char* message, int len, bool trusted_structured_json)
 {
     if (!IsWebhookEnabled() || !message || len <= 0) {
         return false;
     }
 
-    // Construct the payload using helper function
-    std::string message_to_send = ConstructWebhookPayload(std::string(message, len), time(NULL));
+    // Construct the payload using helper function.
+    std::string input_message(message, len);
+    std::string message_to_send = ConstructWebhookPayload(input_message, time(NULL), trusted_structured_json);
 
     // Try to send using round-robin across all pipes
     for (int i = 0; i < MAX_WEBHOOK_PIPES; i++) {
@@ -128,6 +129,16 @@ bool SendWebhookMessage(const char* message, int len)
     }
 
     return false;
+}
+
+bool SendWebhookMessage(const char* message, int len)
+{
+    return SendWebhookMessageInternal(message, len, false);
+}
+
+bool SendWebhookStructuredMessage(const char* message, int len)
+{
+    return SendWebhookMessageInternal(message, len, true);
 }
 
 static void generate_pipe_name(int pipe_index, char *buffer, size_t buffer_size)

@@ -2686,7 +2686,7 @@ blak_int C_SendWebhook(int object_id, local_var_type *local_vars,
     // Close JSON: }}
     json += "}}";
     
-    // Send the webhook message
-    SendWebhookMessage(json.c_str(), (int)json.length());
+    // Send structured webhook message via trusted structured path.
+    SendWebhookStructuredMessage(json.c_str(), (int)json.length());
     return NIL;
 }

@@ -56,15 +56,26 @@ void ShutdownWebhooks(void);
 
 /**
  * Send a message via webhook pipes.
- * Plain text messages are wrapped in JSON with timestamp. Messages starting with '{'
- * are sent as-is (raw JSON). Uses round-robin across pipes for load distribution.
+ * Messages sent through this API are treated as untrusted input and wrapped
+ * in JSON with timestamp.
+ * Uses round-robin across pipes for load distribution.
  * Non-blocking operation - returns false if no pipes are connected.
  * 
- * @param message The message content to send (plain text or JSON)
+ * @param message The message content to send (untrusted/plain text)
  * @param len Length of the message
  * @return True if message was sent successfully, false otherwise
  */
 bool SendWebhookMessage(const char* message, int len);
+
+/**
+ * Send a server-constructed structured event payload via webhook pipes.
+ * Payloads sent through this API are eligible for validated raw JSON passthrough.
+ *
+ * @param message The structured event JSON payload to send
+ * @param len Length of the message
+ * @return True if message was sent successfully, false otherwise
+ */
+bool SendWebhookStructuredMessage(const char* message, int len);
 
 bool IsWebhookEnabled(void);
 
